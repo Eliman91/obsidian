@@ -63,7 +63,7 @@ export function Navbar({ locale }: { locale: Locale }) {
           </div>
 
           <Link
-            href={`/${locale}#collection`}
+            href={`/${locale}/panier`}
             className="flex items-center gap-2 rounded-full border border-titanium/15 px-3 py-1.5 text-xs text-chrome transition-colors hover:border-cyan/40"
           >
             <span aria-hidden>🛒</span>

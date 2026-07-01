@@ -201,3 +201,63 @@ export async function getGadgetByHandle(handle: string): Promise<Gadget | null> 
   }
   return data?.product ? normalizeGadget(data.product) : null;
 }
+
+/* -------------------------------------------------------------
+   CHECKOUT : création d'un panier Shopify → URL de paiement.
+   ------------------------------------------------------------- */
+
+const CART_CREATE_MUTATION = /* GraphQL */ `
+  mutation CartCreate($lines: [CartLineInput!]!) {
+    cartCreate(input: { lines: $lines }) {
+      cart {
+        checkoutUrl
+      }
+      userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+export interface CheckoutLineInput {
+  variantId: string;
+  quantity: number;
+}
+
+/**
+ * Crée un panier Shopify avec les lignes fournies et renvoie l'URL
+ * de paiement sécurisée (checkout Shopify hébergé).
+ */
+export async function createCheckoutUrl(
+  lines: CheckoutLineInput[],
+): Promise<string> {
+  if (lines.length === 0) {
+    throw new Error("[shopify] createCheckoutUrl : panier vide.");
+  }
+
+  const cartLines = lines.map((l) => ({
+    merchandiseId: l.variantId,
+    quantity: l.quantity,
+  }));
+
+  const { data, errors } = await shopifyClient.request<{
+    cartCreate: {
+      cart: { checkoutUrl: string } | null;
+      userErrors: { field: string[] | null; message: string }[];
+    };
+  }>(CART_CREATE_MUTATION, { variables: { lines: cartLines } });
+
+  if (errors) {
+    throw new Error(`[shopify] createCheckoutUrl : ${errors.message ?? "erreur GraphQL"}`);
+  }
+  const userErrors = data?.cartCreate.userErrors ?? [];
+  if (userErrors.length > 0) {
+    throw new Error(`[shopify] createCheckoutUrl : ${userErrors[0].message}`);
+  }
+  const url = data?.cartCreate.cart?.checkoutUrl;
+  if (!url) {
+    throw new Error("[shopify] createCheckoutUrl : URL de paiement absente.");
+  }
+  return url;
+}

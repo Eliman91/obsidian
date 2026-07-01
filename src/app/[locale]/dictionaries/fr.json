@@ -10,6 +10,15 @@
     "soldOut": "Épuisé",
     "from": "À partir de"
   },
+  "cart": {
+    "title": "Votre panier",
+    "empty": "Votre panier est vide.",
+    "continue": "Continuer mes achats",
+    "subtotal": "Sous-total",
+    "checkout": "Passer au paiement",
+    "remove": "Retirer",
+    "processing": "Redirection…"
+  },
   "club": {
     "title": "Le Club Privé",
     "subtitle": "Accès anticipé aux drops, éditions numérotées et conciergerie dédiée."

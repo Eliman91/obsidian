@@ -10,6 +10,15 @@
     "soldOut": "Sold out",
     "from": "From"
   },
+  "cart": {
+    "title": "Your cart",
+    "empty": "Your cart is empty.",
+    "continue": "Continue shopping",
+    "subtotal": "Subtotal",
+    "checkout": "Proceed to checkout",
+    "remove": "Remove",
+    "processing": "Redirecting…"
+  },
   "club": {
     "title": "The Private Club",
     "subtitle": "Early access to drops, numbered editions and a dedicated concierge."
