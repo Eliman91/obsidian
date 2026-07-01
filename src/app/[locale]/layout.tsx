@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { Providers } from "@/components/layout/Providers";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { CookieConsent } from "@/components/layout/CookieConsent";
 import { LOCALES, isLocale } from "@/lib/i18n";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import "../globals.css";
@@ -74,6 +75,7 @@ export default async function LocaleLayout({
           <Navbar locale={locale} />
           {children}
           <Footer locale={locale} />
+          <CookieConsent locale={locale} />
         </Providers>
       </body>
     </html>

@@ -22,6 +22,9 @@ export function Footer({ locale }: { locale: Locale }) {
           <Link href={`/${locale}#club`} className="transition-colors hover:text-cyan">
             Club Privé
           </Link>
+          <Link href={`/${locale}/legal`} className="transition-colors hover:text-cyan">
+            Informations légales
+          </Link>
         </nav>
 
         <p className="text-[11px] tracking-wider text-graphite/60">

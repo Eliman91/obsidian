@@ -203,6 +203,39 @@ export async function getGadgetByHandle(handle: string): Promise<Gadget | null> 
 }
 
 /* -------------------------------------------------------------
+   PAGES LÉGALES (policies gérées dans Shopify Admin > Legal).
+   ------------------------------------------------------------- */
+
+export interface ShopPolicy {
+  title: string;
+  body: string;
+}
+
+const SHOP_POLICIES_QUERY = /* GraphQL */ `
+  query ShopPolicies {
+    shop {
+      privacyPolicy { title body }
+      refundPolicy { title body }
+      termsOfService { title body }
+      shippingPolicy { title body }
+    }
+  }
+`;
+
+/** Récupère les pages légales définies dans Shopify (ignore celles absentes). */
+export async function getShopPolicies(): Promise<ShopPolicy[]> {
+  const { data } = await shopifyClient.request<{
+    shop: Record<string, ShopPolicy | null>;
+  }>(SHOP_POLICIES_QUERY);
+
+  // Ordre d'affichage voulu.
+  const order = ["termsOfService", "shippingPolicy", "refundPolicy", "privacyPolicy"];
+  return order
+    .map((key) => data?.shop[key])
+    .filter((p): p is ShopPolicy => p != null && p.body.trim().length > 0);
+}
+
+/* -------------------------------------------------------------
    CHECKOUT : création d'un panier Shopify → URL de paiement.
    ------------------------------------------------------------- */
 
