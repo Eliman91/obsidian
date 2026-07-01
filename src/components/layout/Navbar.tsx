@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice } from "@/lib/format";
 import { LOCALES } from "@/lib/i18n";
+import { SHOP_ACCOUNT_URL } from "@/lib/site";
 import type { Locale } from "@/lib/types";
 
 export function Navbar({ locale }: { locale: Locale }) {
@@ -61,6 +62,17 @@ export function Navbar({ locale }: { locale: Locale }) {
               </span>
             ))}
           </div>
+
+          <a
+            href={SHOP_ACCOUNT_URL}
+            className="flex items-center gap-1.5 text-xs text-chrome transition-colors hover:text-cyan"
+            title={locale === "fr" ? "Mon compte" : "My account"}
+          >
+            <span aria-hidden>👤</span>
+            <span className="hidden sm:inline">
+              {locale === "fr" ? "Compte" : "Account"}
+            </span>
+          </a>
 
           <Link
             href={`/${locale}/panier`}
