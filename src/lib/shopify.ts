@@ -203,6 +203,46 @@ export async function getGadgetByHandle(handle: string): Promise<Gadget | null> 
 }
 
 /* -------------------------------------------------------------
+   NEWSLETTER : inscription d'un email comme client Shopify.
+   ------------------------------------------------------------- */
+
+const CUSTOMER_CREATE_MUTATION = /* GraphQL */ `
+  mutation NewsletterSignup($input: CustomerCreateInput!) {
+    customerCreate(input: $input) {
+      customer { id }
+      customerUserErrors { code field message }
+    }
+  }
+`;
+
+/**
+ * Inscrit un email (crée un client Shopify avec un mot de passe aléatoire).
+ * Un email déjà inscrit n'est pas une erreur : on considère l'inscription OK.
+ */
+export async function subscribeEmail(email: string): Promise<void> {
+  // Mot de passe fort aléatoire (le client le réinitialisera s'il crée un compte).
+  const password = `${crypto.randomUUID()}Aa1!`;
+
+  const { data, errors } = await shopifyClient.request<{
+    customerCreate: {
+      customer: { id: string } | null;
+      customerUserErrors: { code: string | null; field: string[] | null; message: string }[];
+    };
+  }>(CUSTOMER_CREATE_MUTATION, { variables: { input: { email, password } } });
+
+  if (errors) {
+    throw new Error(`[shopify] subscribeEmail : ${errors.message ?? "erreur GraphQL"}`);
+  }
+
+  const userErrors = data?.customerCreate.customerUserErrors ?? [];
+  // "TAKEN" = email déjà client → déjà inscrit, on ne bloque pas.
+  const fatal = userErrors.find((e) => e.code !== "TAKEN");
+  if (fatal) {
+    throw new Error(`[shopify] subscribeEmail : ${fatal.message}`);
+  }
+}
+
+/* -------------------------------------------------------------
    PAGES LÉGALES (policies gérées dans Shopify Admin > Legal).
    ------------------------------------------------------------- */
 
