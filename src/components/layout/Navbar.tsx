@@ -40,6 +40,9 @@ export function Navbar({ locale }: { locale: Locale }) {
           <Link href={`/${locale}#collection`} className="transition-colors hover:text-cyan">
             Collection
           </Link>
+          <Link href={`/${locale}/manifeste`} className="transition-colors hover:text-cyan">
+            {locale === "fr" ? "Manifeste" : "Manifesto"}
+          </Link>
           <Link href={`/${locale}#club`} className="transition-colors hover:text-cyan">
             Club Privé
           </Link>

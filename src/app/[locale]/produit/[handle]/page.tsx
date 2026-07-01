@@ -7,6 +7,7 @@ import { isLocale } from "@/lib/i18n";
 import { getGadgetByHandle } from "@/lib/shopify";
 import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { ReassuranceBar } from "@/components/ui/ReassuranceBar";
 
 export const revalidate = 300;
 
@@ -116,6 +117,10 @@ export default async function ProductPage({ params }: PageParams) {
               labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
               className="px-8 py-3 text-sm"
             />
+          </div>
+
+          <div className="mt-8">
+            <ReassuranceBar locale={locale} />
           </div>
         </div>
       </div>

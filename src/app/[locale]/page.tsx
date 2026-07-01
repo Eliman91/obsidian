@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import GadgetViewer from "@/components/canvas3d/GadgetViewerLazy";
 import { ProductGrid } from "@/components/ui/ProductGrid";
+import { FaqSection } from "@/components/ui/FaqSection";
 import { getDictionary } from "./dictionaries";
 import { isLocale } from "@/lib/i18n";
 import { getGadgets } from "@/lib/shopify";
@@ -82,6 +83,9 @@ export default async function HomePage({
 
         <ProductGrid gadgets={gadgets} locale={locale} labels={dict.product} />
       </section>
+
+      {/* FAQ — lève les objections d'achat */}
+      <FaqSection locale={locale} />
 
       {/* CLUB PRIVÉ */}
       <section id="club" className="flex min-h-[70vh] items-center justify-center px-6">
