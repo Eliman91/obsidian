@@ -1,0 +1,17 @@
+{
+  "hero": {
+    "eyebrow": "Obsidian Collection",
+    "title": "The object of the future, today.",
+    "subtitle": "Exceptional gadgets, forged in titanium and chrome. Reserved for a chosen few.",
+    "cta": "Explore the collection"
+  },
+  "product": {
+    "addToCart": "Add to cart",
+    "soldOut": "Sold out",
+    "from": "From"
+  },
+  "club": {
+    "title": "The Private Club",
+    "subtitle": "Early access to drops, numbered editions and a dedicated concierge."
+  }
+}

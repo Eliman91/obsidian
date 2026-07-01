@@ -1,0 +1,102 @@
+import Image from "next/image";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import type { Metadata } from "next";
+import { getDictionary } from "../../dictionaries";
+import { isLocale } from "@/lib/i18n";
+import { getGadgetByHandle } from "@/lib/shopify";
+import { formatPrice } from "@/lib/format";
+import { AddToCartButton } from "@/components/ui/AddToCartButton";
+
+export const revalidate = 300;
+
+interface PageParams {
+  params: Promise<{ locale: string; handle: string }>;
+}
+
+export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
+  const { handle } = await params;
+  const gadget = await getGadgetByHandle(handle).catch(() => null);
+  if (!gadget) return { title: "Produit introuvable — OBSIDIAN" };
+  return {
+    title: `${gadget.title} — OBSIDIAN`,
+    description: gadget.description.slice(0, 155),
+    openGraph: gadget.featuredImage
+      ? { images: [{ url: gadget.featuredImage.url }] }
+      : undefined,
+  };
+}
+
+export default async function ProductPage({ params }: PageParams) {
+  const { locale, handle } = await params;
+  if (!isLocale(locale)) notFound();
+
+  const [gadget, dict] = await Promise.all([
+    getGadgetByHandle(handle).catch(() => null),
+    getDictionary(locale),
+  ]);
+
+  if (!gadget) notFound();
+
+  return (
+    <main className="mx-auto max-w-6xl px-6 pb-28 pt-32">
+      <Link
+        href={`/${locale}#collection`}
+        className="mb-10 inline-block text-xs tracking-widest text-graphite uppercase transition-colors hover:text-cyan"
+      >
+        ← {dict.hero.eyebrow}
+      </Link>
+
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
+        {/* Visuel */}
+        <div className="glass relative aspect-square overflow-hidden rounded-[--radius-luxe] bg-gunmetal">
+          {gadget.featuredImage && (
+            <Image
+              src={gadget.featuredImage.url}
+              alt={gadget.featuredImage.altText ?? gadget.title}
+              fill
+              priority
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+          )}
+        </div>
+
+        {/* Détails */}
+        <div className="flex flex-col">
+          <h1 className="text-3xl font-semibold text-holo md:text-4xl">
+            {gadget.title}
+          </h1>
+
+          <div className="mt-4 flex items-baseline gap-3">
+            <span className="text-2xl font-semibold text-titanium">
+              {formatPrice(gadget.price.amount, gadget.price.currencyCode, locale)}
+            </span>
+            {gadget.compareAtPrice && (
+              <span className="text-sm text-graphite line-through">
+                {formatPrice(
+                  gadget.compareAtPrice.amount,
+                  gadget.compareAtPrice.currencyCode,
+                  locale,
+                )}
+              </span>
+            )}
+          </div>
+
+          <div
+            className="prose-obsidian mt-8 space-y-3 text-sm leading-relaxed text-graphite [&_li]:ml-4 [&_li]:list-disc [&_strong]:text-chrome"
+            dangerouslySetInnerHTML={{ __html: gadget.descriptionHtml }}
+          />
+
+          <div className="mt-10">
+            <AddToCartButton
+              gadget={gadget}
+              labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
+              className="px-8 py-3 text-sm"
+            />
+          </div>
+        </div>
+      </div>
+    </main>
+  );
+}

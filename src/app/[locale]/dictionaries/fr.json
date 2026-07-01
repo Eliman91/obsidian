@@ -1,0 +1,17 @@
+{
+  "hero": {
+    "eyebrow": "Collection Obsidian",
+    "title": "L'objet du futur, aujourd'hui.",
+    "subtitle": "Des gadgets d'exception, façonnés dans le titane et le chrome. Réservés à quelques initiés.",
+    "cta": "Explorer la collection"
+  },
+  "product": {
+    "addToCart": "Ajouter au panier",
+    "soldOut": "Épuisé",
+    "from": "À partir de"
+  },
+  "club": {
+    "title": "Le Club Privé",
+    "subtitle": "Accès anticipé aux drops, éditions numérotées et conciergerie dédiée."
+  }
+}
