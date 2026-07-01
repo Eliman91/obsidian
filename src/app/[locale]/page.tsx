@@ -68,11 +68,8 @@ export default async function HomePage({
         </span>
       </section>
 
-      {/* CONFIGURATEUR 3D — piloté par le scroll (le cœur du site) */}
-      <GadgetViewer scrollLengthVh={3} />
-
-      {/* COLLECTION — produits Shopify en direct */}
-      <section id="collection" className="mx-auto max-w-6xl px-6 py-28">
+      {/* COLLECTION — produits Shopify (remontée en haut pour la conversion) */}
+      <section id="collection" className="mx-auto max-w-6xl px-6 py-24">
         <header className="mb-14 text-center">
           <p className="mb-4 font-mono text-xs tracking-[0.4em] text-graphite uppercase">
             {dict.hero.eyebrow}
@@ -84,6 +81,9 @@ export default async function HomePage({
 
         <ProductGrid gadgets={gadgets} locale={locale} labels={dict.product} />
       </section>
+
+      {/* CONFIGURATEUR 3D — showcase de marque (chargé au scroll) */}
+      <GadgetViewer scrollLengthVh={2} />
 
       {/* FAQ — lève les objections d'achat */}
       <FaqSection locale={locale} />

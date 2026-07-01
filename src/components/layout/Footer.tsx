@@ -28,6 +28,12 @@ export function Footer({ locale }: { locale: Locale }) {
           <Link href={`/${locale}/legal`} className="transition-colors hover:text-cyan">
             Informations légales
           </Link>
+          <a
+            href="mailto:eliesse.chaib@gmail.com"
+            className="transition-colors hover:text-cyan"
+          >
+            Contact
+          </a>
         </nav>
 
         <p className="text-[11px] tracking-wider text-graphite/60">
