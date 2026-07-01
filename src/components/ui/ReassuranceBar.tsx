@@ -9,13 +9,13 @@ const ITEMS = {
   fr: [
     { icon: "🔒", label: "Paiement 100 % sécurisé" },
     { icon: "🚚", label: "Livraison suivie" },
-    { icon: "↩️", label: "Retours sous 14 jours" },
+    { icon: "↩️", label: "Retours sous 30 jours" },
     { icon: "💎", label: "Édition numérotée" },
   ],
   en: [
     { icon: "🔒", label: "100% secure payment" },
     { icon: "🚚", label: "Tracked shipping" },
-    { icon: "↩️", label: "14-day returns" },
+    { icon: "↩️", label: "30-day returns" },
     { icon: "💎", label: "Numbered edition" },
   ],
 } as const;

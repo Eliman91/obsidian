@@ -14,7 +14,7 @@ const FAQ: Record<Locale, { q: string; a: string }[]> = {
     },
     {
       q: "Puis-je retourner un article ?",
-      a: "Oui. Vous disposez de 14 jours pour retourner tout article neuf dans son emballage d'origine, conformément à la loi.",
+      a: "Oui. Vous disposez de 30 jours pour retourner tout article neuf dans son emballage d'origine.",
     },
     {
       q: "Les matériaux sont-ils garantis ?",
@@ -36,7 +36,7 @@ const FAQ: Record<Locale, { q: string; a: string }[]> = {
     },
     {
       q: "Can I return an item?",
-      a: "Yes. You have 14 days to return any unused item in its original packaging, in line with the law.",
+      a: "Yes. You have 30 days to return any unused item in its original packaging.",
     },
     {
       q: "Are the materials guaranteed?",
