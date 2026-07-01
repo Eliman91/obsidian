@@ -4,10 +4,12 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getDictionary } from "../../dictionaries";
 import { isLocale } from "@/lib/i18n";
-import { getGadgetByHandle } from "@/lib/shopify";
+import { getGadgetByHandle, getGadgets } from "@/lib/shopify";
 import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { ReassuranceBar } from "@/components/ui/ReassuranceBar";
+import { ProductCard } from "@/components/ui/ProductCard";
+import { StickyBuyBar } from "@/components/ui/StickyBuyBar";
 
 export const revalidate = 300;
 
@@ -32,12 +34,16 @@ export default async function ProductPage({ params }: PageParams) {
   const { locale, handle } = await params;
   if (!isLocale(locale)) notFound();
 
-  const [gadget, dict] = await Promise.all([
+  const [gadget, dict, allGadgets] = await Promise.all([
     getGadgetByHandle(handle).catch(() => null),
     getDictionary(locale),
+    getGadgets(6).catch(() => []),
   ]);
 
   if (!gadget) notFound();
+
+  // Cross-sell : autres produits, en excluant celui affiché.
+  const related = allGadgets.filter((g) => g.handle !== handle).slice(0, 3);
 
   // Donnée structurée Product (rich snippets moteurs de recherche).
   const jsonLd = {
@@ -124,6 +130,31 @@ export default async function ProductPage({ params }: PageParams) {
           </div>
         </div>
       </div>
+
+      {/* CROSS-SELL — augmente le panier moyen */}
+      {related.length > 0 && (
+        <section className="mt-28">
+          <h2 className="mb-10 text-center text-2xl font-semibold text-holo md:text-3xl">
+            {locale === "fr" ? "Vous aimerez aussi" : "You may also like"}
+          </h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {related.map((g) => (
+              <ProductCard
+                key={g.id}
+                gadget={g}
+                locale={locale}
+                labels={dict.product}
+              />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <StickyBuyBar
+        gadget={gadget}
+        locale={locale}
+        labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
+      />
     </main>
   );
 }

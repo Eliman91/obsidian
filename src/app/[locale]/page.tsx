@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import GadgetViewer from "@/components/canvas3d/GadgetViewerLazy";
 import { ProductGrid } from "@/components/ui/ProductGrid";
 import { FaqSection } from "@/components/ui/FaqSection";
+import { ClubSignup } from "@/components/ui/ClubSignup";
 import { getDictionary } from "./dictionaries";
 import { isLocale } from "@/lib/i18n";
 import { getGadgets } from "@/lib/shopify";
@@ -89,12 +90,11 @@ export default async function HomePage({
 
       {/* CLUB PRIVÉ */}
       <section id="club" className="flex min-h-[70vh] items-center justify-center px-6">
-        <div className="glass-heavy max-w-lg rounded-[--radius-luxe] p-10 text-center">
-          <h2 className="text-3xl font-semibold text-holo md:text-4xl">
-            {dict.club.title}
-          </h2>
-          <p className="mt-4 text-graphite">{dict.club.subtitle}</p>
-        </div>
+        <ClubSignup
+          locale={locale}
+          title={dict.club.title}
+          subtitle={dict.club.subtitle}
+        />
       </section>
     </main>
   );
