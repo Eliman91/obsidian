@@ -38,8 +38,30 @@ export default async function ProductPage({ params }: PageParams) {
 
   if (!gadget) notFound();
 
+  // Donnée structurée Product (rich snippets moteurs de recherche).
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: gadget.title,
+    image: gadget.featuredImage ? [gadget.featuredImage.url] : undefined,
+    description: gadget.description,
+    brand: { "@type": "Brand", name: "OBSIDIAN" },
+    offers: {
+      "@type": "Offer",
+      price: gadget.price.amount,
+      priceCurrency: gadget.price.currencyCode,
+      availability: gadget.availableForSale
+        ? "https://schema.org/InStock"
+        : "https://schema.org/OutOfStock",
+    },
+  };
+
   return (
     <main className="mx-auto max-w-6xl px-6 pb-28 pt-32">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <Link
         href={`/${locale}#collection`}
         className="mb-10 inline-block text-xs tracking-widest text-graphite uppercase transition-colors hover:text-cyan"
