@@ -47,6 +47,20 @@ export default async function HomePage({
         >
           {dict.hero.cta}
         </a>
+
+        <p className="mt-6 text-xs tracking-wide text-graphite">
+          {locale === "fr" ? (
+            <>
+              🎁 <span className="text-cyan">−10 %</span> sur votre première commande avec le code{" "}
+              <span className="font-mono font-semibold text-chrome">WELCOME10</span>
+            </>
+          ) : (
+            <>
+              🎁 <span className="text-cyan">−10%</span> on your first order with code{" "}
+              <span className="font-mono font-semibold text-chrome">WELCOME10</span>
+            </>
+          )}
+        </p>
         <span className="absolute bottom-8 font-mono text-[10px] tracking-[0.3em] text-graphite/60 uppercase">
           Scroll ↓
         </span>
