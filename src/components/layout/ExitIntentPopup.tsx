@@ -8,7 +8,7 @@
    • À la soumission : crée un client Shopify puis révèle le code.
    ============================================================= */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Locale } from "@/lib/types";
 
 const STORAGE_KEY = "obsidian.newsletter.v1";
@@ -46,10 +46,13 @@ const COPY = {
 export function ExitIntentPopup({ locale }: { locale: Locale }) {
   const [open, setOpen] = useState(false);
   const [email, setEmail] = useState("");
+  // Honeypot anti-bot : champ invisible qui doit rester vide.
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">(
     "idle",
   );
   const [copied, setCopied] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const t = COPY[locale];
 
   useEffect(() => {
@@ -78,6 +81,18 @@ export function ExitIntentPopup({ locale }: { locale: Locale }) {
     return cleanup;
   }, []);
 
+  // Accessibilité dialog : fermeture Échap + focus initial dans la modale.
+  useEffect(() => {
+    if (!open) return;
+    dialogRef.current?.focus();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   function persistDismissed() {
     try {
       window.localStorage.setItem(STORAGE_KEY, "1");
@@ -102,7 +117,7 @@ export function ExitIntentPopup({ locale }: { locale: Locale }) {
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, website }),
       });
       if (!res.ok) throw new Error();
       persistDismissed();
@@ -127,13 +142,18 @@ export function ExitIntentPopup({ locale }: { locale: Locale }) {
       onClick={close}
     >
       <div
-        className="glass-heavy relative w-full max-w-md rounded-[--radius-luxe] p-8 text-center"
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="exit-popup-title"
+        tabIndex={-1}
+        className="glass-heavy relative w-full max-w-md rounded-[--radius-luxe] p-8 text-center focus:outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={close}
-          aria-label="Fermer"
+          aria-label={locale === "fr" ? "Fermer" : "Close"}
           className="absolute right-4 top-4 text-graphite transition-colors hover:text-chrome"
         >
           ✕
@@ -141,7 +161,9 @@ export function ExitIntentPopup({ locale }: { locale: Locale }) {
 
         {status === "success" ? (
           <>
-            <h2 className="text-2xl font-semibold text-holo">{t.successTitle}</h2>
+            <h2 id="exit-popup-title" className="text-2xl font-semibold text-holo">
+              {t.successTitle}
+            </h2>
             <p className="mt-3 text-sm text-graphite">{t.successText}</p>
             <button
               type="button"
@@ -156,9 +178,22 @@ export function ExitIntentPopup({ locale }: { locale: Locale }) {
           </>
         ) : (
           <>
-            <h2 className="text-2xl font-semibold text-holo">{t.title}</h2>
+            <h2 id="exit-popup-title" className="text-2xl font-semibold text-holo">
+              {t.title}
+            </h2>
             <p className="mt-3 text-sm text-graphite">{t.subtitle}</p>
             <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-3">
+              {/* Honeypot : invisible pour les humains, rempli par les bots. */}
+              <input
+                type="text"
+                name="website"
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                tabIndex={-1}
+                autoComplete="off"
+                aria-hidden="true"
+                className="absolute -left-[9999px] h-px w-px opacity-0"
+              />
               <input
                 type="email"
                 required

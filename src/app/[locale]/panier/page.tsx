@@ -4,10 +4,17 @@ import { getDictionary } from "../dictionaries";
 import { isLocale } from "@/lib/i18n";
 import { CartView } from "@/components/ui/CartView";
 
-export const metadata: Metadata = {
-  title: "Panier — OBSIDIAN",
-  robots: { index: false }, // page panier : pas d'indexation moteur.
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title: locale === "en" ? "Cart — OBSIDIAN" : "Panier — OBSIDIAN",
+    robots: { index: false }, // page panier : pas d'indexation moteur.
+  };
+}
 
 export default async function CartPage({
   params,

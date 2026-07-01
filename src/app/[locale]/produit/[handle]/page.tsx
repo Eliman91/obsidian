@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { getDictionary } from "../../dictionaries";
 import { isLocale } from "@/lib/i18n";
 import { getGadgetByHandle, getGadgets } from "@/lib/shopify";
+import { SITE_URL, localizedAlternates } from "@/lib/site";
 import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { ReassuranceBar } from "@/components/ui/ReassuranceBar";
@@ -18,15 +19,28 @@ interface PageParams {
 }
 
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
-  const { handle } = await params;
+  const { locale, handle } = await params;
   const gadget = await getGadgetByHandle(handle).catch(() => null);
-  if (!gadget) return { title: "Produit introuvable — OBSIDIAN" };
+  if (!gadget) {
+    return {
+      title:
+        locale === "en"
+          ? "Product not found — OBSIDIAN"
+          : "Produit introuvable — OBSIDIAN",
+    };
+  }
   return {
     title: `${gadget.title} — OBSIDIAN`,
     description: gadget.description.slice(0, 155),
-    openGraph: gadget.featuredImage
-      ? { images: [{ url: gadget.featuredImage.url }] }
-      : undefined,
+    // Canonical propre à la page produit (sinon héritage de l'accueil → doublon SEO).
+    alternates: localizedAlternates(`/produit/${handle}`, locale),
+    openGraph: {
+      type: "website",
+      url: `/${locale}/produit/${handle}`,
+      title: `${gadget.title} — OBSIDIAN`,
+      description: gadget.description.slice(0, 155),
+      ...(gadget.featuredImage && { images: [{ url: gadget.featuredImage.url }] }),
+    },
   };
 }
 
@@ -50,11 +64,13 @@ export default async function ProductPage({ params }: PageParams) {
     "@context": "https://schema.org",
     "@type": "Product",
     name: gadget.title,
+    url: `${SITE_URL}/${locale}/produit/${handle}`,
     image: gadget.featuredImage ? [gadget.featuredImage.url] : undefined,
     description: gadget.description,
     brand: { "@type": "Brand", name: "OBSIDIAN" },
     offers: {
       "@type": "Offer",
+      url: `${SITE_URL}/${locale}/produit/${handle}`,
       price: gadget.price.amount,
       priceCurrency: gadget.price.currencyCode,
       availability: gadget.availableForSale

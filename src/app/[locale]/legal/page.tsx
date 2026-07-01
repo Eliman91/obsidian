@@ -1,13 +1,25 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
+import { localizedAlternates } from "@/lib/site";
 import { getShopPolicies, type ShopPolicy } from "@/lib/shopify";
 
 export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "Informations légales — OBSIDIAN",
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  return {
+    title:
+      locale === "en"
+        ? "Legal information — OBSIDIAN"
+        : "Informations légales — OBSIDIAN",
+    alternates: localizedAlternates("/legal", locale),
+  };
+}
 
 export default async function LegalPage({
   params,

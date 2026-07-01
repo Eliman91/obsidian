@@ -228,7 +228,11 @@ export async function subscribeEmail(email: string): Promise<void> {
       customer: { id: string } | null;
       customerUserErrors: { code: string | null; field: string[] | null; message: string }[];
     };
-  }>(CUSTOMER_CREATE_MUTATION, { variables: { input: { email, password } } });
+  }>(CUSTOMER_CREATE_MUTATION, {
+    // acceptsMarketing: true → consentement marketing enregistré dans Shopify.
+    // Sans lui, l'email est capturé mais NON abonné → newsletters impossibles.
+    variables: { input: { email, password, acceptsMarketing: true } },
+  });
 
   if (errors) {
     throw new Error(`[shopify] subscribeEmail : ${errors.message ?? "erreur GraphQL"}`);

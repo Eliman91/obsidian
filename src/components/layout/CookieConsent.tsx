@@ -7,11 +7,23 @@
    cookies strictement nécessaires (panier) pour l'instant.
    ============================================================= */
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import type { Locale } from "@/lib/types";
 
 const STORAGE_KEY = "obsidian.consent.v1";
+
+/* Lecture SSR-safe du consentement via useSyncExternalStore :
+   - côté serveur : considéré accepté (bandeau masqué, pas de mismatch d'hydratation)
+   - côté client : lit localStorage, React re-rend si la valeur diffère. */
+const noopSubscribe = () => () => {};
+function readConsent(): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) !== null;
+  } catch {
+    return true; // localStorage indisponible : on n'affiche rien.
+  }
+}
 
 const COPY = {
   fr: {
@@ -27,18 +39,11 @@ const COPY = {
 } as const;
 
 export function CookieConsent({ locale }: { locale: Locale }) {
-  const [visible, setVisible] = useState(false);
+  const consented = useSyncExternalStore(noopSubscribe, readConsent, () => true);
+  const [dismissed, setDismissed] = useState(false);
   const copy = COPY[locale];
 
-  useEffect(() => {
-    try {
-      if (!window.localStorage.getItem(STORAGE_KEY)) setVisible(true);
-    } catch {
-      /* localStorage indisponible : on n'affiche rien. */
-    }
-  }, []);
-
-  if (!visible) return null;
+  if (consented || dismissed) return null;
 
   function accept() {
     try {
@@ -46,7 +51,7 @@ export function CookieConsent({ locale }: { locale: Locale }) {
     } catch {
       /* ignore */
     }
-    setVisible(false);
+    setDismissed(true);
   }
 
   return (

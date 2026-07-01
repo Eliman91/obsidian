@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import { ExitIntentPopup } from "@/components/layout/ExitIntentPopup";
 import { LOCALES, isLocale } from "@/lib/i18n";
-import { SITE_NAME, SITE_URL } from "@/lib/site";
+import { SITE_NAME, SITE_URL, localizedAlternates } from "@/lib/site";
 import "../globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -43,10 +43,9 @@ export async function generateMetadata({
     metadataBase: new URL(SITE_URL),
     title: copy.title,
     description: copy.description,
-    alternates: {
-      canonical: `/${locale}`,
-      languages: { fr: "/fr", en: "/en" },
-    },
+    // NB : chaque page enfant redéclare ses alternates via localizedAlternates()
+    // pour ne pas hériter du canonical de l'accueil (bug SEO classique).
+    alternates: localizedAlternates("", locale),
     openGraph: {
       type: "website",
       siteName: SITE_NAME,

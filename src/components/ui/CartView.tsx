@@ -107,7 +107,9 @@ export function CartView({
                 <div className="flex items-center rounded-full border border-titanium/15">
                   <button
                     type="button"
-                    aria-label="-"
+                    aria-label={
+                      locale === "fr" ? "Diminuer la quantité" : "Decrease quantity"
+                    }
                     onClick={() => setQuantity(line.variantId, line.quantity - 1)}
                     className="px-3 py-1 text-graphite hover:text-chrome"
                   >
@@ -118,7 +120,9 @@ export function CartView({
                   </span>
                   <button
                     type="button"
-                    aria-label="+"
+                    aria-label={
+                      locale === "fr" ? "Augmenter la quantité" : "Increase quantity"
+                    }
                     onClick={() => setQuantity(line.variantId, line.quantity + 1)}
                     className="px-3 py-1 text-graphite hover:text-chrome"
                   >

@@ -4,14 +4,16 @@
    PRODUCT CARD — carte produit de luxe (glassmorphism + hover)
    Image & titre cliquables → page produit. Bouton d'ajout panier
    délégué à AddToCartButton (ne déclenche pas la navigation).
+   Apparition au scroll via useScrollReveal (GSAP, déjà chargé)
+   → framer-motion supprimé du bundle (~40 Ko gzip économisés).
    ============================================================= */
 
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import type { Gadget, Locale } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 interface ProductCardProps {
   gadget: Gadget;
@@ -21,13 +23,11 @@ interface ProductCardProps {
 
 export function ProductCard({ gadget, locale, labels }: ProductCardProps) {
   const href = `/${locale}/produit/${gadget.handle}`;
+  const revealRef = useScrollReveal<HTMLElement>({ y: 24, duration: 0.6 });
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 24 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+    <article
+      ref={revealRef}
       className="glass group flex flex-col overflow-hidden rounded-[--radius-luxe]"
     >
       {/* Visuel cliquable */}
@@ -73,6 +73,6 @@ export function ProductCard({ gadget, locale, labels }: ProductCardProps) {
           />
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }

@@ -35,6 +35,8 @@ export function ClubSignup({
   subtitle: string;
 }) {
   const [email, setEmail] = useState("");
+  // Honeypot anti-bot : champ invisible qui doit rester vide.
+  const [website, setWebsite] = useState("");
   const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">(
     "idle",
   );
@@ -51,7 +53,7 @@ export function ClubSignup({
       const res = await fetch("/api/subscribe", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, website }),
       });
       if (!res.ok) throw new Error();
       setStatus("success");
@@ -69,6 +71,17 @@ export function ClubSignup({
         <p className="mt-8 text-sm text-cyan">{t.success}</p>
       ) : (
         <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-3 sm:flex-row">
+          {/* Honeypot : invisible pour les humains, rempli par les bots. */}
+          <input
+            type="text"
+            name="website"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            className="absolute -left-[9999px] h-px w-px opacity-0"
+          />
           <input
             type="email"
             required

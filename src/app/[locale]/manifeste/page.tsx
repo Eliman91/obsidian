@@ -2,13 +2,31 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
+import { localizedAlternates } from "@/lib/site";
 import type { Locale } from "@/lib/types";
 
-export const metadata: Metadata = {
-  title: "Manifeste — OBSIDIAN",
-  description:
-    "La philosophie OBSIDIAN : l'objet réduit à son essence, façonné dans le titane et le chrome. Le futur, sans compromis.",
-};
+const META = {
+  fr: {
+    title: "Manifeste — OBSIDIAN",
+    description:
+      "La philosophie OBSIDIAN : l'objet réduit à son essence, façonné dans le titane et le chrome. Le futur, sans compromis.",
+  },
+  en: {
+    title: "Manifesto — OBSIDIAN",
+    description:
+      "The OBSIDIAN philosophy: the object reduced to its essence, forged in titanium and chrome. The future, without compromise.",
+  },
+} as const;
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const meta = isLocale(locale) ? META[locale] : META.fr;
+  return { ...meta, alternates: localizedAlternates("/manifeste", locale) };
+}
 
 const CONTENT: Record<
   Locale,
