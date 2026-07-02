@@ -64,11 +64,18 @@ const GADGET_FRAGMENT = /* GraphQL */ `
       }
     }
     # Première variante disponible → merchandiseId pour l'ajout au panier.
+    # quantityAvailable = stock live (rareté). Nécessite le droit
+    # unauthenticated_read_product_inventory : sinon renvoyé null (dégradation OK).
     variants(first: 1) {
       nodes {
         id
         availableForSale
+        quantityAvailable
       }
+    }
+    # Taille de l'édition limitée (série numérotée).
+    editionSize: metafield(namespace: "custom", key: "edition_size") {
+      value
     }
     # Metafields custom : modèle 3D (.glb/.gltf), vidéo Mux, matériau.
     model3d: metafield(namespace: "custom", key: "model_3d") {
@@ -131,7 +138,10 @@ interface RawGadget {
   } | null;
   priceRange: { minVariantPrice: RawMoney };
   compareAtPriceRange: { minVariantPrice: RawMoney };
-  variants: { nodes: { id: string; availableForSale: boolean }[] };
+  variants: {
+    nodes: { id: string; availableForSale: boolean; quantityAvailable: number | null }[];
+  };
+  editionSize: { value: string } | null;
   model3d: { reference: { url: string } | null } | null;
   muxPlaybackId: { value: string } | null;
   material: { value: string } | null;
@@ -168,6 +178,8 @@ function normalizeGadget(raw: RawGadget): Gadget {
     price,
     // On n'expose compareAtPrice que s'il est réellement supérieur (vraie promo).
     compareAtPrice: compareAt.amount > price.amount ? compareAt : null,
+    editionSize: raw.editionSize ? Number.parseInt(raw.editionSize.value, 10) : null,
+    quantityAvailable: raw.variants.nodes[0]?.quantityAvailable ?? null,
     metafields: toMetafields(raw),
   };
 }
@@ -182,10 +194,12 @@ export async function getGadgets(first = 12): Promise<Gadget[]> {
     products: { nodes: RawGadget[] };
   }>(PRODUCTS_QUERY, { variables: { first } });
 
-  if (errors) {
-    throw new Error(`[shopify] getGadgets : ${errors.message ?? "erreur GraphQL"}`);
+  // On ne bloque que si AUCUNE donnée : Shopify renvoie des erreurs de champ
+  // (ex. quantityAvailable sans le scope stock) tout en fournissant le reste.
+  if (!data) {
+    throw new Error(`[shopify] getGadgets : ${errors?.message ?? "erreur GraphQL"}`);
   }
-  return (data?.products.nodes ?? []).map(normalizeGadget);
+  return (data.products?.nodes ?? []).map(normalizeGadget);
 }
 
 /** Récupère un gadget par son handle (URL), ou null s'il n'existe pas. */
@@ -194,12 +208,13 @@ export async function getGadgetByHandle(handle: string): Promise<Gadget | null> 
     product: RawGadget | null;
   }>(PRODUCT_BY_HANDLE_QUERY, { variables: { handle } });
 
-  if (errors) {
+  // Erreurs de champ non bloquantes (ex. stock sans scope) : on garde les données.
+  if (!data) {
     throw new Error(
-      `[shopify] getGadgetByHandle : ${errors.message ?? "erreur GraphQL"}`,
+      `[shopify] getGadgetByHandle : ${errors?.message ?? "erreur GraphQL"}`,
     );
   }
-  return data?.product ? normalizeGadget(data.product) : null;
+  return data.product ? normalizeGadget(data.product) : null;
 }
 
 /* -------------------------------------------------------------

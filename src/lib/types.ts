@@ -45,5 +45,16 @@ export interface Gadget {
   price: Money;
   compareAtPrice: Money | null;
   availableForSale: boolean;
+  /**
+   * Taille totale de la série (édition limitée). null si non défini.
+   * Metafield custom.edition_size — pilote le badge de rareté.
+   */
+  editionSize: number | null;
+  /**
+   * Nombre de pièces encore disponibles (stock live Shopify).
+   * null si le droit `unauthenticated_read_product_inventory` n'est pas
+   * accordé au token → le badge retombe sur la seule taille d'édition.
+   */
+  quantityAvailable: number | null;
   metafields: GadgetMetafields;
 }

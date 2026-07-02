@@ -9,6 +9,7 @@ import { SITE_URL, localizedAlternates } from "@/lib/site";
 import { formatPrice } from "@/lib/format";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { ReassuranceBar } from "@/components/ui/ReassuranceBar";
+import { ScarcityBadge } from "@/components/ui/ScarcityBadge";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { StickyBuyBar } from "@/components/ui/StickyBuyBar";
 
@@ -126,6 +127,14 @@ export default async function ProductPage({ params }: PageParams) {
                 )}
               </span>
             )}
+          </div>
+
+          <div className="mt-6">
+            <ScarcityBadge
+              editionSize={gadget.editionSize}
+              remaining={gadget.quantityAvailable}
+              locale={locale}
+            />
           </div>
 
           <div

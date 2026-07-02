@@ -47,6 +47,13 @@ export function ProductCard({ gadget, locale, labels }: ProductCardProps) {
             </span>
           </div>
         )}
+
+        {/* Puce rareté : édition limitée (chiffre réel Shopify). */}
+        {gadget.editionSize && (
+          <span className="glass absolute left-3 top-3 rounded-full px-3 py-1 font-mono text-[10px] tracking-widest text-cyan uppercase">
+            {locale === "fr" ? "Éd." : "Ed."} {gadget.editionSize}
+          </span>
+        )}
       </Link>
 
       {/* Infos */}
