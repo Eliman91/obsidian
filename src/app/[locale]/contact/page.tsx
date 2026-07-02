@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { isLocale } from "@/lib/i18n";
-import { CONTACT_EMAIL, WHATSAPP_URL, localizedAlternates } from "@/lib/site";
+import { CONTACT_EMAIL, HAS_WHATSAPP, WHATSAPP_URL, localizedAlternates } from "@/lib/site";
 
 export async function generateMetadata({
   params,
@@ -56,14 +56,16 @@ export default async function ContactPage({
       <p className="mt-5 max-w-md text-graphite">{c.subtitle}</p>
 
       <div className="mt-10 flex w-full flex-col gap-3 sm:flex-row sm:justify-center">
-        <a
-          href={WHATSAPP_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ring-neon flex items-center justify-center gap-2 rounded-full bg-cyan px-7 py-3 text-sm font-semibold text-vantablack transition-all hover:brightness-110"
-        >
-          <span aria-hidden>💬</span> {c.whatsapp}
-        </a>
+        {HAS_WHATSAPP && (
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ring-neon flex items-center justify-center gap-2 rounded-full bg-cyan px-7 py-3 text-sm font-semibold text-vantablack transition-all hover:brightness-110"
+          >
+            <span aria-hidden>💬</span> {c.whatsapp}
+          </a>
+        )}
         <a
           href={`mailto:${CONTACT_EMAIL}`}
           className="glass flex items-center justify-center gap-2 rounded-full px-7 py-3 text-sm font-medium text-chrome transition-transform hover:scale-[1.03]"

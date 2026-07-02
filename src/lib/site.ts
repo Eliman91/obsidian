@@ -14,9 +14,13 @@ export const CONTACT_EMAIL = "eliesse.chaib@gmail.com";
 
 /**
  * Numéro WhatsApp au format international, chiffres uniquement (sans + ni espaces).
- * ⚠️ PLACEHOLDER — à remplacer par le vrai numéro (ex. "33612345678").
+ * Laisser VIDE tant qu'il n'y a pas de numéro dédié : le bouton WhatsApp
+ * n'apparaît que lorsque ce champ est renseigné (ex. "33612345678").
  */
-export const WHATSAPP_NUMBER = "33600000000";
+export const WHATSAPP_NUMBER = "";
+
+/** true si un numéro WhatsApp est configuré → affiche le bouton. */
+export const HAS_WHATSAPP = WHATSAPP_NUMBER.length > 0;
 
 /** Lien direct vers la conversation WhatsApp (message pré-rempli). */
 export const WHATSAPP_URL = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(
