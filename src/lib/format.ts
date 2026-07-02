@@ -11,3 +11,16 @@ export function formatPrice(
     currency: currencyCode,
   }).format(amount);
 }
+
+/**
+ * Tronque un texte à `max` caractères SANS couper un mot,
+ * et ajoute une ellipse. Utilisé pour les meta descriptions
+ * (une coupe en plein mot fait négligé dans les SERP).
+ */
+export function truncateAtWord(text: string, max = 155): string {
+  const clean = text.trim();
+  if (clean.length <= max) return clean;
+  const slice = clean.slice(0, max - 1);
+  const lastSpace = slice.lastIndexOf(" ");
+  return `${slice.slice(0, lastSpace > 0 ? lastSpace : max - 1)}…`;
+}

@@ -42,6 +42,13 @@ export interface Gadget {
   featuredImage: MediaImage | null;
   /** merchandiseId de la première variante (pour l'ajout au panier). */
   variantId: string | null;
+  /** SKU de la première variante (donnée structurée Product). */
+  sku: string | null;
+  /**
+   * Champs SEO renseignés dans Shopify (Admin > Référencement).
+   * Prioritaires sur les valeurs générées pour title/meta description.
+   */
+  seo: { title: string | null; description: string | null };
   price: Money;
   compareAtPrice: Money | null;
   availableForSale: boolean;

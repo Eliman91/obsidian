@@ -7,10 +7,25 @@ export const SITE_NAME = "OBSIDIAN";
 /** Portail de compte client hébergé par Shopify (connexion / inscription). */
 export const SHOP_ACCOUNT_URL = "https://1jbrjy-qc.myshopify.com/account";
 
+/**
+ * Code promo de bienvenue, appliqué automatiquement à la création
+ * du panier (levier CRO : zéro friction). Shopify l'écarte de
+ * lui-même si le client n'y a plus droit (déjà utilisé, etc.).
+ * Doit rester synchronisé avec le code créé dans Shopify Admin.
+ */
+export const WELCOME_DISCOUNT_CODE = "WELCOME10";
+
 /* -------------------------------------------------------------
    CONTACT — pour joindre la boutique en cas de problème.
    ------------------------------------------------------------- */
 export const CONTACT_EMAIL = "eliesse.chaib@gmail.com";
+
+/* -------------------------------------------------------------
+   DROP — date du prochain lancement (crée l'événement + l'attente).
+   Format ISO avec fuseau. Modifie juste cette ligne pour changer la
+   date. Passe la date : le compte à rebours devient "Ouvert" tout seul.
+   ------------------------------------------------------------- */
+export const DROP_DATE = "2026-07-23T18:00:00+02:00";
 
 /**
  * Numéro WhatsApp au format international, chiffres uniquement (sans + ni espaces).

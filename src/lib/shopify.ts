@@ -1,6 +1,6 @@
 import "server-only";
 import { createStorefrontApiClient } from "@shopify/storefront-api-client";
-import type { Gadget, GadgetMetafields, Money } from "@/lib/types";
+import type { Gadget, GadgetMetafields, Locale, Money } from "@/lib/types";
 
 /* =============================================================
    CLIENT SHOPIFY STOREFRONT API (Shopify Plus)
@@ -37,6 +37,16 @@ export const shopifyClient = createStorefrontApiClient({
    les champs utiles + les metafields personnalisés du luxe).
    ------------------------------------------------------------- */
 
+/**
+ * Convertit une locale du site en LanguageCode Shopify pour la
+ * directive @inContext : les contenus traduits (Translate & Adapt)
+ * sont renvoyés dans la langue demandée, avec repli automatique
+ * sur la langue principale si la traduction n'existe pas.
+ */
+function toLanguageCode(locale: Locale): "FR" | "EN" {
+  return locale === "en" ? "EN" : "FR";
+}
+
 const GADGET_FRAGMENT = /* GraphQL */ `
   fragment GadgetFields on Product {
     id
@@ -45,6 +55,11 @@ const GADGET_FRAGMENT = /* GraphQL */ `
     description
     descriptionHtml
     availableForSale
+    # Champs SEO renseignés dans l'admin Shopify (prioritaires pour les metas).
+    seo {
+      title
+      description
+    }
     featuredImage {
       url
       altText
@@ -69,6 +84,7 @@ const GADGET_FRAGMENT = /* GraphQL */ `
     variants(first: 1) {
       nodes {
         id
+        sku
         availableForSale
         quantityAvailable
       }
@@ -96,7 +112,8 @@ const GADGET_FRAGMENT = /* GraphQL */ `
 
 const PRODUCTS_QUERY = /* GraphQL */ `
   ${GADGET_FRAGMENT}
-  query GetGadgets($first: Int!) {
+  query GetGadgets($first: Int!, $language: LanguageCode)
+  @inContext(language: $language) {
     products(first: $first, sortKey: BEST_SELLING) {
       nodes {
         ...GadgetFields
@@ -107,7 +124,8 @@ const PRODUCTS_QUERY = /* GraphQL */ `
 
 const PRODUCT_BY_HANDLE_QUERY = /* GraphQL */ `
   ${GADGET_FRAGMENT}
-  query GetGadgetByHandle($handle: String!) {
+  query GetGadgetByHandle($handle: String!, $language: LanguageCode)
+  @inContext(language: $language) {
     product(handle: $handle) {
       ...GadgetFields
     }
@@ -130,6 +148,7 @@ interface RawGadget {
   description: string;
   descriptionHtml: string;
   availableForSale: boolean;
+  seo: { title: string | null; description: string | null } | null;
   featuredImage: {
     url: string;
     altText: string | null;
@@ -139,7 +158,12 @@ interface RawGadget {
   priceRange: { minVariantPrice: RawMoney };
   compareAtPriceRange: { minVariantPrice: RawMoney };
   variants: {
-    nodes: { id: string; availableForSale: boolean; quantityAvailable: number | null }[];
+    nodes: {
+      id: string;
+      sku: string | null;
+      availableForSale: boolean;
+      quantityAvailable: number | null;
+    }[];
   };
   editionSize: { value: string } | null;
   model3d: { reference: { url: string } | null } | null;
@@ -173,8 +197,13 @@ function normalizeGadget(raw: RawGadget): Gadget {
     description: raw.description,
     descriptionHtml: raw.descriptionHtml,
     availableForSale: raw.availableForSale,
+    seo: {
+      title: raw.seo?.title ?? null,
+      description: raw.seo?.description ?? null,
+    },
     featuredImage: raw.featuredImage,
     variantId: raw.variants.nodes[0]?.id ?? null,
+    sku: raw.variants.nodes[0]?.sku || null,
     price,
     // On n'expose compareAtPrice que s'il est réellement supérieur (vraie promo).
     compareAtPrice: compareAt.amount > price.amount ? compareAt : null,
@@ -188,11 +217,13 @@ function normalizeGadget(raw: RawGadget): Gadget {
    API PUBLIQUE de la lib.
    ------------------------------------------------------------- */
 
-/** Récupère les meilleurs gadgets (par défaut 12). */
-export async function getGadgets(first = 12): Promise<Gadget[]> {
+/** Récupère les meilleurs gadgets (par défaut 12), dans la langue demandée. */
+export async function getGadgets(first = 12, locale: Locale = "fr"): Promise<Gadget[]> {
   const { data, errors } = await shopifyClient.request<{
     products: { nodes: RawGadget[] };
-  }>(PRODUCTS_QUERY, { variables: { first } });
+  }>(PRODUCTS_QUERY, {
+    variables: { first, language: toLanguageCode(locale) },
+  });
 
   // On ne bloque que si AUCUNE donnée : Shopify renvoie des erreurs de champ
   // (ex. quantityAvailable sans le scope stock) tout en fournissant le reste.
@@ -202,11 +233,16 @@ export async function getGadgets(first = 12): Promise<Gadget[]> {
   return (data.products?.nodes ?? []).map(normalizeGadget);
 }
 
-/** Récupère un gadget par son handle (URL), ou null s'il n'existe pas. */
-export async function getGadgetByHandle(handle: string): Promise<Gadget | null> {
+/** Récupère un gadget par son handle (URL) dans la langue demandée, ou null. */
+export async function getGadgetByHandle(
+  handle: string,
+  locale: Locale = "fr",
+): Promise<Gadget | null> {
   const { data, errors } = await shopifyClient.request<{
     product: RawGadget | null;
-  }>(PRODUCT_BY_HANDLE_QUERY, { variables: { handle } });
+  }>(PRODUCT_BY_HANDLE_QUERY, {
+    variables: { handle, language: toLanguageCode(locale) },
+  });
 
   // Erreurs de champ non bloquantes (ex. stock sans scope) : on garde les données.
   if (!data) {
@@ -299,8 +335,19 @@ export async function getShopPolicies(): Promise<ShopPolicy[]> {
    ------------------------------------------------------------- */
 
 const CART_CREATE_MUTATION = /* GraphQL */ `
-  mutation CartCreate($lines: [CartLineInput!]!) {
-    cartCreate(input: { lines: $lines }) {
+  mutation CartCreate(
+    $lines: [CartLineInput!]!
+    $discountCodes: [String!]
+    $buyerIdentity: CartBuyerIdentityInput
+    $language: LanguageCode
+  ) @inContext(language: $language) {
+    cartCreate(
+      input: {
+        lines: $lines
+        discountCodes: $discountCodes
+        buyerIdentity: $buyerIdentity
+      }
+    ) {
       cart {
         checkoutUrl
       }
@@ -317,12 +364,25 @@ export interface CheckoutLineInput {
   quantity: number;
 }
 
+export interface CheckoutOptions {
+  /** Langue du checkout (page de paiement Shopify localisée). */
+  locale?: Locale;
+  /** Pays présumé de l'acheteur (adresse pré-contextualisée). */
+  countryCode?: string;
+  /**
+   * Codes promo appliqués d'office au panier. Shopify ignore
+   * silencieusement un code non applicable : aucun risque d'erreur.
+   */
+  discountCodes?: string[];
+}
+
 /**
  * Crée un panier Shopify avec les lignes fournies et renvoie l'URL
  * de paiement sécurisée (checkout Shopify hébergé).
  */
 export async function createCheckoutUrl(
   lines: CheckoutLineInput[],
+  options: CheckoutOptions = {},
 ): Promise<string> {
   if (lines.length === 0) {
     throw new Error("[shopify] createCheckoutUrl : panier vide.");
@@ -338,7 +398,16 @@ export async function createCheckoutUrl(
       cart: { checkoutUrl: string } | null;
       userErrors: { field: string[] | null; message: string }[];
     };
-  }>(CART_CREATE_MUTATION, { variables: { lines: cartLines } });
+  }>(CART_CREATE_MUTATION, {
+    variables: {
+      lines: cartLines,
+      discountCodes: options.discountCodes ?? [],
+      buyerIdentity: options.countryCode
+        ? { countryCode: options.countryCode }
+        : undefined,
+      language: toLanguageCode(options.locale ?? "fr"),
+    },
+  });
 
   if (errors) {
     throw new Error(`[shopify] createCheckoutUrl : ${errors.message ?? "erreur GraphQL"}`);
@@ -352,4 +421,129 @@ export async function createCheckoutUrl(
     throw new Error("[shopify] createCheckoutUrl : URL de paiement absente.");
   }
   return url;
+}
+
+/* -------------------------------------------------------------
+   COLLECTIONS : pages catégorie (SEO + maillage interne).
+   ------------------------------------------------------------- */
+
+export interface GadgetCollection {
+  id: string;
+  handle: string;
+  title: string;
+  description: string;
+  seo: { title: string | null; description: string | null };
+  image: { url: string; altText: string | null } | null;
+  gadgets: Gadget[];
+}
+
+interface RawCollection {
+  id: string;
+  handle: string;
+  title: string;
+  description: string;
+  seo: { title: string | null; description: string | null } | null;
+  image: { url: string; altText: string | null } | null;
+  products: { nodes: RawGadget[] };
+}
+
+function normalizeCollection(raw: RawCollection): GadgetCollection {
+  return {
+    id: raw.id,
+    handle: raw.handle,
+    title: raw.title,
+    description: raw.description,
+    seo: {
+      title: raw.seo?.title ?? null,
+      description: raw.seo?.description ?? null,
+    },
+    image: raw.image,
+    gadgets: (raw.products?.nodes ?? []).map(normalizeGadget),
+  };
+}
+
+const COLLECTION_FRAGMENT = /* GraphQL */ `
+  ${GADGET_FRAGMENT}
+  fragment CollectionFields on Collection {
+    id
+    handle
+    title
+    description
+    seo {
+      title
+      description
+    }
+    image {
+      url
+      altText
+    }
+    products(first: 12) {
+      nodes {
+        ...GadgetFields
+      }
+    }
+  }
+`;
+
+const COLLECTIONS_QUERY = /* GraphQL */ `
+  ${COLLECTION_FRAGMENT}
+  query GetCollections($first: Int!, $language: LanguageCode)
+  @inContext(language: $language) {
+    collections(first: $first) {
+      nodes {
+        ...CollectionFields
+      }
+    }
+  }
+`;
+
+const COLLECTION_BY_HANDLE_QUERY = /* GraphQL */ `
+  ${COLLECTION_FRAGMENT}
+  query GetCollectionByHandle($handle: String!, $language: LanguageCode)
+  @inContext(language: $language) {
+    collection(handle: $handle) {
+      ...CollectionFields
+    }
+  }
+`;
+
+/**
+ * Liste les collections marchandes (la collection technique
+ * « frontpage » de Shopify, vide, est exclue).
+ */
+export async function getCollections(
+  first = 10,
+  locale: Locale = "fr",
+): Promise<GadgetCollection[]> {
+  const { data, errors } = await shopifyClient.request<{
+    collections: { nodes: RawCollection[] };
+  }>(COLLECTIONS_QUERY, {
+    variables: { first, language: toLanguageCode(locale) },
+  });
+
+  if (!data) {
+    throw new Error(`[shopify] getCollections : ${errors?.message ?? "erreur GraphQL"}`);
+  }
+  return (data.collections?.nodes ?? [])
+    .filter((c) => c.handle !== "frontpage")
+    .map(normalizeCollection);
+}
+
+/** Récupère une collection par son handle (URL), ou null. */
+export async function getCollectionByHandle(
+  handle: string,
+  locale: Locale = "fr",
+): Promise<GadgetCollection | null> {
+  const { data, errors } = await shopifyClient.request<{
+    collection: RawCollection | null;
+  }>(COLLECTION_BY_HANDLE_QUERY, {
+    variables: { handle, language: toLanguageCode(locale) },
+  });
+
+  if (!data) {
+    throw new Error(
+      `[shopify] getCollectionByHandle : ${errors?.message ?? "erreur GraphQL"}`,
+    );
+  }
+  return data.collection ? normalizeCollection(data.collection) : null;
 }

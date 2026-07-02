@@ -3,8 +3,10 @@ import GadgetViewer from "@/components/canvas3d/GadgetViewerLazy";
 import { ProductGrid } from "@/components/ui/ProductGrid";
 import { FaqSection } from "@/components/ui/FaqSection";
 import { ClubSignup } from "@/components/ui/ClubSignup";
+import { DropCountdown } from "@/components/ui/DropCountdown";
 import { getDictionary } from "./dictionaries";
 import { isLocale } from "@/lib/i18n";
+import { DROP_DATE } from "@/lib/site";
 import { getGadgets } from "@/lib/shopify";
 import type { Gadget } from "@/lib/types";
 
@@ -93,6 +95,9 @@ export default async function HomePage({
         id="club"
         className="flex min-h-[70vh] flex-col items-center justify-center gap-10 px-6 py-24"
       >
+        {/* Drop daté — crée l'événement et l'attente */}
+        <DropCountdown locale={locale} isoDate={DROP_DATE} />
+
         {/* Fondateurs — récompense les premiers acheteurs (rareté sociale) */}
         <div className="glass max-w-lg rounded-[--radius-luxe] px-8 py-6 text-center">
           <p className="mb-3 font-mono text-[11px] tracking-[0.3em] text-cyan uppercase">
