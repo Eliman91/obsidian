@@ -25,6 +25,7 @@ const COPY = {
     remaining: (r: number, n: number) => `Plus que ${r} sur ${n}`,
     almost: "Bientôt épuisé",
     soldout: "Série épuisée",
+    neverAgain: "Une fois épuisée, cette pièce n'est jamais rééditée.",
   },
   en: {
     limited: "Limited edition",
@@ -32,6 +33,7 @@ const COPY = {
     remaining: (r: number, n: number) => `Only ${r} of ${n} left`,
     almost: "Almost gone",
     soldout: "Sold out",
+    neverAgain: "Once sold out, this piece is never reissued.",
   },
 } as const;
 
@@ -77,6 +79,11 @@ export function ScarcityBadge({ editionSize, remaining, locale }: ScarcityBadgeP
       {almost && (
         <p className="mt-2 text-xs font-medium text-plasma">{c.almost}</p>
       )}
+
+      {/* Rareté définitive : une série épuisée ne revient jamais. */}
+      <p className="mt-3 border-t border-titanium/10 pt-3 text-[11px] leading-snug text-graphite/70">
+        {c.neverAgain}
+      </p>
     </div>
   );
 }

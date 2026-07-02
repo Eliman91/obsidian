@@ -19,11 +19,14 @@ export function Footer({ locale }: { locale: Locale }) {
           <Link href={`/${locale}#collection`} className="transition-colors hover:text-cyan">
             Collection
           </Link>
+          <Link href={`/${locale}/savoir-faire`} className="transition-colors hover:text-cyan">
+            {locale === "fr" ? "Pourquoi ce prix" : "Why this price"}
+          </Link>
           <Link href={`/${locale}/manifeste`} className="transition-colors hover:text-cyan">
             {locale === "fr" ? "Manifeste" : "Manifesto"}
           </Link>
           <Link href={`/${locale}#club`} className="transition-colors hover:text-cyan">
-            Club Privé
+            {locale === "fr" ? "Le Cercle" : "The Circle"}
           </Link>
           <Link href={`/${locale}/legal`} className="transition-colors hover:text-cyan">
             Informations légales

@@ -129,6 +129,13 @@ export default async function ProductPage({ params }: PageParams) {
             )}
           </div>
 
+          <Link
+            href={`/${locale}/savoir-faire`}
+            className="mt-2 inline-block text-xs text-graphite underline decoration-graphite/30 underline-offset-4 transition-colors hover:text-cyan"
+          >
+            {locale === "fr" ? "Pourquoi ce prix ?" : "Why this price?"}
+          </Link>
+
           <div className="mt-6">
             <ScarcityBadge
               editionSize={gadget.editionSize}

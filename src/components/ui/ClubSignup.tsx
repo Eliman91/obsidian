@@ -11,16 +11,16 @@ import type { Locale } from "@/lib/types";
 const COPY = {
   fr: {
     placeholder: "Votre email",
-    cta: "Rejoindre le Club",
+    cta: "Demander une invitation",
     sending: "…",
-    success: "Bienvenue dans le cercle. À très vite.",
+    success: "Votre demande est enregistrée. Nous revenons vers vous.",
     error: "Une erreur est survenue. Réessayez.",
   },
   en: {
     placeholder: "Your email",
-    cta: "Join the Club",
+    cta: "Request an invitation",
     sending: "…",
-    success: "Welcome to the circle. See you soon.",
+    success: "Your request is in. We'll be in touch.",
     error: "Something went wrong. Try again.",
   },
 } as const;

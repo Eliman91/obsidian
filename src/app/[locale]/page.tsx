@@ -88,8 +88,33 @@ export default async function HomePage({
       {/* FAQ — lève les objections d'achat */}
       <FaqSection locale={locale} />
 
-      {/* CLUB PRIVÉ */}
-      <section id="club" className="flex min-h-[70vh] items-center justify-center px-6">
+      {/* MEMBRES FONDATEURS + CERCLE */}
+      <section
+        id="club"
+        className="flex min-h-[70vh] flex-col items-center justify-center gap-10 px-6 py-24"
+      >
+        {/* Fondateurs — récompense les premiers acheteurs (rareté sociale) */}
+        <div className="glass max-w-lg rounded-[--radius-luxe] px-8 py-6 text-center">
+          <p className="mb-3 font-mono text-[11px] tracking-[0.3em] text-cyan uppercase">
+            {locale === "fr" ? "Membres Fondateurs" : "Founding Members"}
+          </p>
+          <p className="text-sm leading-relaxed text-graphite">
+            {locale === "fr" ? (
+              <>
+                Les <span className="text-titanium">100 premières commandes</span> reçoivent
+                un numéro de série gravé, un tarif gelé à vie et l'accès permanent au Cercle.
+                Un statut qui ne se rachètera jamais.
+              </>
+            ) : (
+              <>
+                The <span className="text-titanium">first 100 orders</span> receive an engraved
+                serial number, a price locked for life and permanent access to the Circle.
+                A status that can never be bought back.
+              </>
+            )}
+          </p>
+        </div>
+
         <ClubSignup
           locale={locale}
           title={dict.club.title}
