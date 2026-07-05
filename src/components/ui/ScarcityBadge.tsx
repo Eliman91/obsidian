@@ -41,8 +41,10 @@ export function ScarcityBadge({ editionSize, remaining, locale }: ScarcityBadgeP
   if (!editionSize || editionSize <= 0) return null;
   const c = COPY[locale];
 
-  // Mode LIVE : le stock est connu et cohérent (≤ taille d'édition).
-  const isLive = remaining !== null && remaining <= editionSize;
+  // Mode LIVE : le stock est connu, cohérent (< taille d'édition) ET une
+  // vente au moins a eu lieu. À stock plein, « Plus que 500 sur 500 »
+  // n'exprime aucune rareté : on retombe sur l'affichage statique.
+  const isLive = remaining !== null && remaining < editionSize;
   const soldOut = isLive && remaining <= 0;
   // % vendu (pour la barre). En mode statique : 0 (barre pleine à droite).
   const sold = isLive ? editionSize - remaining : 0;

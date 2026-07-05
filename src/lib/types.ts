@@ -45,6 +45,12 @@ export interface Gadget {
   /** SKU de la première variante (donnée structurée Product). */
   sku: string | null;
   /**
+   * Tags Shopify du produit. Pilote notamment le mode
+   * « Drop à venir » (tag drop-a-venir) : produit visible mais
+   * non achetable, avec liste d'attente à la place du panier.
+   */
+  tags: string[];
+  /**
    * Champs SEO renseignés dans Shopify (Admin > Référencement).
    * Prioritaires sur les valeurs générées pour title/meta description.
    */

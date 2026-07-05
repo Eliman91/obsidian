@@ -8,7 +8,8 @@
   "product": {
     "addToCart": "Add to cart",
     "soldOut": "Sold out",
-    "from": "From"
+    "from": "From",
+    "comingSoon": "Coming drop"
   },
   "cart": {
     "title": "Your cart",

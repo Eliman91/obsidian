@@ -12,17 +12,19 @@ import Image from "next/image";
 import Link from "next/link";
 import type { Gadget, Locale } from "@/lib/types";
 import { formatPrice } from "@/lib/format";
+import { isComingSoon } from "@/lib/drop";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
 import { useScrollReveal } from "@/hooks/useScrollReveal";
 
 interface ProductCardProps {
   gadget: Gadget;
   locale: Locale;
-  labels: { addToCart: string; soldOut: string; from: string };
+  labels: { addToCart: string; soldOut: string; from: string; comingSoon: string };
 }
 
 export function ProductCard({ gadget, locale, labels }: ProductCardProps) {
   const href = `/${locale}/produit/${gadget.handle}`;
+  const comingSoon = isComingSoon(gadget);
   const revealRef = useScrollReveal<HTMLElement>({ y: 24, duration: 0.6 });
 
   return (
@@ -74,10 +76,20 @@ export function ProductCard({ gadget, locale, labels }: ProductCardProps) {
             </span>
           </div>
 
-          <AddToCartButton
-            gadget={gadget}
-            labels={{ addToCart: labels.addToCart, soldOut: labels.soldOut }}
-          />
+          {comingSoon ? (
+            /* Drop à venir : pas d'achat — lien vers la fiche (liste d'attente). */
+            <Link
+              href={href}
+              className="ring-neon shrink-0 rounded-full border border-cyan/30 px-4 py-2 font-mono text-[10px] tracking-widest text-cyan uppercase transition-all hover:bg-cyan hover:text-vantablack"
+            >
+              {labels.comingSoon}
+            </Link>
+          ) : (
+            <AddToCartButton
+              gadget={gadget}
+              labels={{ addToCart: labels.addToCart, soldOut: labels.soldOut }}
+            />
+          )}
         </div>
       </div>
     </article>

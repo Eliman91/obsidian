@@ -13,6 +13,16 @@ export function formatPrice(
 }
 
 /**
+ * Sérialise un objet JSON-LD pour injection dans <script>.
+ * Échappe "<" en < : sans cela, une valeur contenant
+ * "</script>" fermerait la balise et exécuterait du HTML arbitraire
+ * (XSS). Même précaution que la sérialisation interne de Next.
+ */
+export function safeJsonLd(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
+}
+
+/**
  * Tronque un texte à `max` caractères SANS couper un mot,
  * et ajoute une ellipse. Utilisé pour les meta descriptions
  * (une coupe en plein mot fait négligé dans les SERP).

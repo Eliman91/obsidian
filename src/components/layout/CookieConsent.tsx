@@ -27,12 +27,12 @@ function readConsent(): boolean {
 
 const COPY = {
   fr: {
-    text: "Nous utilisons des cookies nécessaires au fonctionnement du site (panier).",
+    text: "Nous utilisons des cookies nécessaires au fonctionnement du site (panier) et, avec votre accord, une mesure d'audience anonyme.",
     link: "En savoir plus",
     accept: "J'accepte",
   },
   en: {
-    text: "We use cookies strictly necessary for the site to work (cart).",
+    text: "We use cookies strictly necessary for the site to work (cart) and, with your consent, anonymous audience measurement.",
     link: "Learn more",
     accept: "Accept",
   },
@@ -51,6 +51,9 @@ export function CookieConsent({ locale }: { locale: Locale }) {
     } catch {
       /* ignore */
     }
+    // Prévient les scripts conditionnés au consentement (ex. GA4)
+    // qu'ils peuvent démarrer, sans rechargement de page.
+    window.dispatchEvent(new Event("obsidian:consent"));
     setDismissed(true);
   }
 

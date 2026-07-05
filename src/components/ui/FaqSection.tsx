@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/types";
+import { safeJsonLd } from "@/lib/format";
 
 /* =============================================================
    FAQ SECTION — lève les objections d'achat.
@@ -70,7 +71,7 @@ export function FaqSection({ locale }: { locale: Locale }) {
     <section className="mx-auto max-w-2xl px-6 py-24">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
       />
       <h2 className="mb-10 text-center text-3xl font-semibold text-holo md:text-4xl">
         FAQ

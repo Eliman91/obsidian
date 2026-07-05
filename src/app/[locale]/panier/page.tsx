@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDictionary } from "../dictionaries";
 import { isLocale } from "@/lib/i18n";
 import { CartView } from "@/components/ui/CartView";
+import { ReassuranceBar } from "@/components/ui/ReassuranceBar";
 
 export async function generateMetadata({
   params,
@@ -32,6 +33,12 @@ export default async function CartPage({
         {dict.cart.title}
       </h1>
       <CartView locale={locale} labels={dict.cart} />
+
+      {/* Réassurance répétée à l'étape panier : à ces niveaux de prix,
+          rappeler paiement sécurisé / retours au moment de payer est clé. */}
+      <div className="mt-12">
+        <ReassuranceBar locale={locale} />
+      </div>
     </main>
   );
 }

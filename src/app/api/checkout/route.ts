@@ -1,11 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createCheckoutUrl, type CheckoutLineInput } from "@/lib/shopify";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { WELCOME_DISCOUNT_CODE } from "@/lib/site";
+import { isLocale } from "@/lib/i18n";
 
 /* =============================================================
    POST /api/checkout
-   Corps attendu : { lines: [{ variantId, quantity }] }
+   Corps attendu : { lines: [{ variantId, quantity }], locale? }
    Réponse : { url } — URL de paiement Shopify sécurisée.
+   Le code de bienvenue est appliqué d'office (Shopify le retire
+   seul s'il n'est pas applicable) et le checkout est servi dans
+   la langue du visiteur.
    Garde-fous : 20 lignes max, 99 unités max par ligne, 10 req/min/IP.
    ============================================================= */
 
@@ -53,8 +58,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Locale du visiteur (langue du checkout Shopify). "fr" par défaut.
+  const rawLocale = (body as { locale?: unknown }).locale;
+  const locale = typeof rawLocale === "string" && isLocale(rawLocale) ? rawLocale : "fr";
+
   try {
-    const url = await createCheckoutUrl(lines);
+    const url = await createCheckoutUrl(lines, {
+      locale,
+      // Boutique France/EUR : pays présumé de livraison.
+      countryCode: "FR",
+      discountCodes: [WELCOME_DISCOUNT_CODE],
+    });
     return NextResponse.json({ url });
   } catch (error) {
     console.error("[api/checkout]", error);

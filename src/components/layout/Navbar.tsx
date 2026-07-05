@@ -47,6 +47,7 @@ export function Navbar({ locale }: { locale: Locale }) {
 
   const links = [
     { href: `/${locale}#collection`, label: "Collection" },
+    { href: `/${locale}/collection/anti-stress`, label: "Anti-stress" },
     { href: `/${locale}/savoir-faire`, label: locale === "fr" ? "Pourquoi ce prix" : "Why this price" },
     { href: `/${locale}/manifeste`, label: locale === "fr" ? "Manifeste" : "Manifesto" },
     { href: `/${locale}#club`, label: locale === "fr" ? "Le Cercle" : "The Circle" },

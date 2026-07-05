@@ -6,9 +6,10 @@ import { ClubSignup } from "@/components/ui/ClubSignup";
 import { DropCountdown } from "@/components/ui/DropCountdown";
 import { getDictionary } from "./dictionaries";
 import { isLocale } from "@/lib/i18n";
-import { DROP_DATE } from "@/lib/site";
+import { CONTACT_EMAIL, DROP_DATE, SITE_NAME, SITE_URL } from "@/lib/site";
 import { getGadgets } from "@/lib/shopify";
 import type { Gadget } from "@/lib/types";
+import { safeJsonLd } from "@/lib/format";
 
 // ISR : la page est régénérée au plus toutes les 5 min (produits à jour).
 export const revalidate = 300;
@@ -27,13 +28,44 @@ export default async function HomePage({
   // la section plutôt que de casser toute la page.
   let gadgets: Gadget[] = [];
   try {
-    gadgets = await getGadgets(9);
+    gadgets = await getGadgets(9, locale);
   } catch (error) {
     console.error("[home] Échec du chargement des produits Shopify :", error);
   }
 
+  // Entités structurées du site : identité de marque (Organization)
+  // + entité site (WebSite). Déclarées une seule fois, sur l'accueil.
+  const organizationJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: `${SITE_URL}/${locale}/opengraph-image`,
+    contactPoint: {
+      "@type": "ContactPoint",
+      email: CONTACT_EMAIL,
+      contactType: "customer service",
+      availableLanguage: ["French", "English"],
+    },
+  };
+  const webSiteJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: SITE_NAME,
+    url: SITE_URL,
+    inLanguage: locale === "fr" ? "fr-FR" : "en-US",
+  };
+
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(organizationJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(webSiteJsonLd) }}
+      />
       {/* HERO */}
       <section className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
         <p className="mb-6 font-mono text-xs tracking-[0.4em] text-graphite uppercase">
@@ -107,7 +139,7 @@ export default async function HomePage({
             {locale === "fr" ? (
               <>
                 Les <span className="text-titanium">100 premières commandes</span> reçoivent
-                un numéro de série gravé, un tarif gelé à vie et l'accès permanent au Cercle.
+                un numéro de série gravé, un tarif gelé à vie et l’accès permanent au Cercle.
                 Un statut qui ne se rachètera jamais.
               </>
             ) : (

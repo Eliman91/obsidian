@@ -48,6 +48,8 @@ export function CartView({
             variantId: l.variantId,
             quantity: l.quantity,
           })),
+          // Langue du checkout Shopify (page de paiement localisée).
+          locale,
         }),
       });
       const data = (await res.json()) as { url?: string; error?: string };

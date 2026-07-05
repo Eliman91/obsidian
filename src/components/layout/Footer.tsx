@@ -1,12 +1,22 @@
 import Link from "next/link";
 import type { Locale } from "@/lib/types";
 import { SITE_NAME } from "@/lib/site";
+import { getCollections, type GadgetCollection } from "@/lib/shopify";
 
 /* =============================================================
    FOOTER — pied de page minimaliste de luxe.
+   Liens collections : maillage interne présent sur toutes les
+   pages (SEO). En cas d'indisponibilité Shopify, on omet le bloc.
    ============================================================= */
-export function Footer({ locale }: { locale: Locale }) {
+export async function Footer({ locale }: { locale: Locale }) {
   const year = new Date().getFullYear();
+
+  let collections: GadgetCollection[] = [];
+  try {
+    collections = await getCollections(10, locale);
+  } catch {
+    // Pas bloquant : le footer s'affiche sans les collections.
+  }
 
   return (
     <footer className="border-t border-titanium/10 px-6 py-14">
@@ -14,6 +24,23 @@ export function Footer({ locale }: { locale: Locale }) {
         <span className="text-sm font-semibold tracking-[0.4em] text-chrome uppercase">
           {SITE_NAME}
         </span>
+
+        {collections.length > 0 && (
+          <nav
+            aria-label={locale === "fr" ? "Collections" : "Collections"}
+            className="flex flex-wrap justify-center gap-4 text-xs tracking-widest text-graphite/80 uppercase"
+          >
+            {collections.map((c) => (
+              <Link
+                key={c.id}
+                href={`/${locale}/collection/${c.handle}`}
+                className="transition-colors hover:text-cyan"
+              >
+                {c.title}
+              </Link>
+            ))}
+          </nav>
+        )}
 
         <nav className="flex flex-wrap justify-center gap-6 text-xs tracking-widest text-graphite uppercase">
           <Link href={`/${locale}#collection`} className="transition-colors hover:text-cyan">

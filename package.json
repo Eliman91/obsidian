@@ -9,7 +9,6 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@mux/mux-player-react": "^3.13.0",
     "@react-three/drei": "^10.7.7",
     "@react-three/fiber": "^9.6.1",
     "@shopify/storefront-api-client": "^1.0.10",
@@ -30,5 +29,8 @@
     "eslint-config-next": "16.2.9",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }

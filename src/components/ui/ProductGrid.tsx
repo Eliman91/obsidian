@@ -10,7 +10,7 @@ import { ProductCard } from "@/components/ui/ProductCard";
 interface ProductGridProps {
   gadgets: Gadget[];
   locale: Locale;
-  labels: { addToCart: string; soldOut: string; from: string };
+  labels: { addToCart: string; soldOut: string; from: string; comingSoon: string };
 }
 
 export function ProductGrid({ gadgets, locale, labels }: ProductGridProps) {

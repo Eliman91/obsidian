@@ -1,6 +1,7 @@
 import "server-only";
 import { createStorefrontApiClient } from "@shopify/storefront-api-client";
 import type { Gadget, GadgetMetafields, Locale, Money } from "@/lib/types";
+import { COMING_SOON_TAG } from "@/lib/drop";
 
 /* =============================================================
    CLIENT SHOPIFY STOREFRONT API (Shopify Plus)
@@ -55,6 +56,7 @@ const GADGET_FRAGMENT = /* GraphQL */ `
     description
     descriptionHtml
     availableForSale
+    tags
     # Champs SEO renseignés dans l'admin Shopify (prioritaires pour les metas).
     seo {
       title
@@ -148,6 +150,7 @@ interface RawGadget {
   description: string;
   descriptionHtml: string;
   availableForSale: boolean;
+  tags: string[];
   seo: { title: string | null; description: string | null } | null;
   featuredImage: {
     url: string;
@@ -197,6 +200,7 @@ function normalizeGadget(raw: RawGadget): Gadget {
     description: raw.description,
     descriptionHtml: raw.descriptionHtml,
     availableForSale: raw.availableForSale,
+    tags: raw.tags ?? [],
     seo: {
       title: raw.seo?.title ?? null,
       description: raw.seo?.description ?? null,
@@ -376,6 +380,41 @@ export interface CheckoutOptions {
   discountCodes?: string[];
 }
 
+const VARIANT_TAGS_QUERY = /* GraphQL */ `
+  query VariantTags($ids: [ID!]!) {
+    nodes(ids: $ids) {
+      ... on ProductVariant {
+        id
+        product {
+          tags
+        }
+      }
+    }
+  }
+`;
+
+/**
+ * Garde-fou serveur : rejette toute ligne dont le produit est un
+ * « drop à venir » (l'UI ne le propose plus, mais un panier stocké
+ * avant la bascule — ou une requête forgée — pourrait encore le tenter).
+ */
+async function assertPurchasable(lines: CheckoutLineInput[]): Promise<void> {
+  const { data } = await shopifyClient.request<{
+    nodes: ({ id: string; product: { tags: string[] } } | null)[];
+  }>(VARIANT_TAGS_QUERY, {
+    variables: { ids: lines.map((l) => l.variantId) },
+  });
+
+  const blocked = (data?.nodes ?? []).some(
+    (n) => n?.product.tags.includes(COMING_SOON_TAG),
+  );
+  if (blocked) {
+    throw new Error(
+      "[shopify] createCheckoutUrl : un produit du panier n'est pas encore en vente (drop à venir).",
+    );
+  }
+}
+
 /**
  * Crée un panier Shopify avec les lignes fournies et renvoie l'URL
  * de paiement sécurisée (checkout Shopify hébergé).
@@ -387,6 +426,7 @@ export async function createCheckoutUrl(
   if (lines.length === 0) {
     throw new Error("[shopify] createCheckoutUrl : panier vide.");
   }
+  await assertPurchasable(lines);
 
   const cartLines = lines.map((l) => ({
     merchandiseId: l.variantId,

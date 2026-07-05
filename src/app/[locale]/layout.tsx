@@ -6,6 +6,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CookieConsent } from "@/components/layout/CookieConsent";
 import { ExitIntentPopup } from "@/components/layout/ExitIntentPopup";
+import { Analytics } from "@/components/layout/Analytics";
 import { LOCALES, isLocale } from "@/lib/i18n";
 import { SITE_NAME, SITE_URL, localizedAlternates } from "@/lib/site";
 import "../globals.css";
@@ -77,6 +78,8 @@ export default async function LocaleLayout({
           <Footer locale={locale} />
           <CookieConsent locale={locale} />
           <ExitIntentPopup locale={locale} />
+          {/* GA4 : inactif sans NEXT_PUBLIC_GA_ID + consentement. */}
+          <Analytics />
         </Providers>
       </body>
     </html>

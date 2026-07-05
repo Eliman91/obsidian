@@ -6,8 +6,10 @@ import { getDictionary } from "../../dictionaries";
 import { isLocale } from "@/lib/i18n";
 import { getGadgetByHandle, getGadgets } from "@/lib/shopify";
 import { SITE_URL, localizedAlternates } from "@/lib/site";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, truncateAtWord, safeJsonLd } from "@/lib/format";
+import { formatDropDate, isComingSoon } from "@/lib/drop";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { WaitlistSignup } from "@/components/ui/WaitlistSignup";
 import { ReassuranceBar } from "@/components/ui/ReassuranceBar";
 import { ScarcityBadge } from "@/components/ui/ScarcityBadge";
 import { ProductCard } from "@/components/ui/ProductCard";
@@ -21,7 +23,10 @@ interface PageParams {
 
 export async function generateMetadata({ params }: PageParams): Promise<Metadata> {
   const { locale, handle } = await params;
-  const gadget = await getGadgetByHandle(handle).catch(() => null);
+  const gadget = await getGadgetByHandle(
+    handle,
+    isLocale(locale) ? locale : "fr",
+  ).catch(() => null);
   if (!gadget) {
     return {
       title:
@@ -30,17 +35,40 @@ export async function generateMetadata({ params }: PageParams): Promise<Metadata
           : "Produit introuvable — OBSIDIAN",
     };
   }
+
+  // Priorité aux champs SEO rédigés dans Shopify (Admin > Référencement) ;
+  // sinon repli sur un title généré + une description coupée entre deux mots.
+  const title = gadget.seo.title ?? `${gadget.title} — OBSIDIAN`;
+  const description =
+    gadget.seo.description ?? truncateAtWord(gadget.description, 155);
+  const images = gadget.featuredImage
+    ? [
+        {
+          url: gadget.featuredImage.url,
+          alt: gadget.featuredImage.altText ?? gadget.title,
+        },
+      ]
+    : undefined;
+
   return {
-    title: `${gadget.title} — OBSIDIAN`,
-    description: gadget.description.slice(0, 155),
+    title,
+    description,
     // Canonical propre à la page produit (sinon héritage de l'accueil → doublon SEO).
     alternates: localizedAlternates(`/produit/${handle}`, locale),
     openGraph: {
       type: "website",
       url: `/${locale}/produit/${handle}`,
-      title: `${gadget.title} — OBSIDIAN`,
-      description: gadget.description.slice(0, 155),
-      ...(gadget.featuredImage && { images: [{ url: gadget.featuredImage.url }] }),
+      title,
+      description,
+      ...(images && { images }),
+    },
+    // Sans surcharge explicite, les cartes Twitter héritent du layout
+    // (titre/description de l'accueil) → mauvais texte au partage.
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      ...(images && { images: images.map((i) => i.url) }),
     },
   };
 }
@@ -50,9 +78,9 @@ export default async function ProductPage({ params }: PageParams) {
   if (!isLocale(locale)) notFound();
 
   const [gadget, dict, allGadgets] = await Promise.all([
-    getGadgetByHandle(handle).catch(() => null),
+    getGadgetByHandle(handle, locale).catch(() => null),
     getDictionary(locale),
-    getGadgets(6).catch(() => []),
+    getGadgets(6, locale).catch(() => []),
   ]);
 
   if (!gadget) notFound();
@@ -60,31 +88,105 @@ export default async function ProductPage({ params }: PageParams) {
   // Cross-sell : autres produits, en excluant celui affiché.
   const related = allGadgets.filter((g) => g.handle !== handle).slice(0, 3);
 
+  const productUrl = `${SITE_URL}/${locale}/produit/${handle}`;
+  // Drop à venir (tag Shopify) : visible mais non achetable → liste d'attente.
+  const comingSoon = isComingSoon(gadget);
+
+  // priceValidUntil : prix garanti 90 jours glissants (régénéré par l'ISR).
+  // Évite l'avertissement Search Console « priceValidUntil manquant ».
+  // Server Component évalué à la revalidation (pas de re-render client) :
+  // la date « impure » est volontaire et stable pour tout le cycle ISR.
+  // eslint-disable-next-line react-hooks/purity
+  const priceValidUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
   // Donnée structurée Product (rich snippets moteurs de recherche).
+  // sku + politiques retour/livraison : lèvent les avertissements
+  // Search Console et débloquent l'affichage Marchand enrichi.
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Product",
     name: gadget.title,
-    url: `${SITE_URL}/${locale}/produit/${handle}`,
+    url: productUrl,
     image: gadget.featuredImage ? [gadget.featuredImage.url] : undefined,
     description: gadget.description,
+    ...(gadget.sku && { sku: gadget.sku }),
     brand: { "@type": "Brand", name: "OBSIDIAN" },
     offers: {
       "@type": "Offer",
-      url: `${SITE_URL}/${locale}/produit/${handle}`,
+      url: productUrl,
       price: gadget.price.amount,
       priceCurrency: gadget.price.currencyCode,
-      availability: gadget.availableForSale
-        ? "https://schema.org/InStock"
-        : "https://schema.org/OutOfStock",
+      priceValidUntil,
+      availability: comingSoon
+        ? "https://schema.org/PreOrder"
+        : gadget.availableForSale
+          ? "https://schema.org/InStock"
+          : "https://schema.org/OutOfStock",
+      // Retours 30 jours (aligné sur la FAQ et les CGV Shopify).
+      hasMerchantReturnPolicy: {
+        "@type": "MerchantReturnPolicy",
+        applicableCountry: "FR",
+        returnPolicyCategory: "https://schema.org/MerchantReturnFiniteReturnWindow",
+        merchantReturnDays: 30,
+        returnMethod: "https://schema.org/ReturnByMail",
+      },
+      // Livraison France : préparation 1-3 j ouvrés, transit 2-5 j (cf. FAQ).
+      shippingDetails: {
+        "@type": "OfferShippingDetails",
+        shippingDestination: {
+          "@type": "DefinedRegion",
+          addressCountry: "FR",
+        },
+        deliveryTime: {
+          "@type": "ShippingDeliveryTime",
+          handlingTime: {
+            "@type": "QuantitativeValue",
+            minValue: 1,
+            maxValue: 3,
+            unitCode: "DAY",
+          },
+          transitTime: {
+            "@type": "QuantitativeValue",
+            minValue: 2,
+            maxValue: 5,
+            unitCode: "DAY",
+          },
+        },
+      },
     },
+  };
+
+  // Fil d'Ariane structuré : situe la fiche dans l'arborescence du site.
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "OBSIDIAN",
+        item: `${SITE_URL}/${locale}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: gadget.title,
+        item: productUrl,
+      },
+    ],
   };
 
   return (
     <main className="mx-auto max-w-6xl px-6 pb-28 pt-32">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
       <Link
         href={`/${locale}#collection`}
@@ -150,11 +252,16 @@ export default async function ProductPage({ params }: PageParams) {
           />
 
           <div className="mt-10">
-            <AddToCartButton
-              gadget={gadget}
-              labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
-              className="px-8 py-3 text-sm"
-            />
+            {comingSoon ? (
+              /* Drop à venir : liste d'attente au lieu de l'achat. */
+              <WaitlistSignup locale={locale} dropDate={formatDropDate(locale)} />
+            ) : (
+              <AddToCartButton
+                gadget={gadget}
+                labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
+                className="px-8 py-3 text-sm"
+              />
+            )}
           </div>
 
           <div className="mt-8">
@@ -182,11 +289,14 @@ export default async function ProductPage({ params }: PageParams) {
         </section>
       )}
 
-      <StickyBuyBar
-        gadget={gadget}
-        locale={locale}
-        labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
-      />
+      {/* Barre d'achat mobile : uniquement pour les produits achetables. */}
+      {!comingSoon && (
+        <StickyBuyBar
+          gadget={gadget}
+          locale={locale}
+          labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
+        />
+      )}
     </main>
   );
 }

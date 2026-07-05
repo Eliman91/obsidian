@@ -8,7 +8,7 @@
    client (évite tout décalage d'hydratation lié à Date.now()).
    ============================================================= */
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import type { Locale } from "@/lib/types";
 
 const COPY = {
@@ -34,8 +34,8 @@ const COPY = {
   },
 } as const;
 
-function diff(target: number) {
-  const ms = Math.max(0, target - Date.now());
+function diff(target: number, nowSec: number) {
+  const ms = Math.max(0, target - nowSec * 1000);
   return {
     d: Math.floor(ms / 86_400_000),
     h: Math.floor((ms / 3_600_000) % 24),
@@ -45,6 +45,15 @@ function diff(target: number) {
   };
 }
 
+/* Horloge externe (useSyncExternalStore) : évite tout setState dans
+   un effet. Snapshot à la seconde près (stable entre deux ticks) ;
+   côté serveur : null → aucun chiffre rendu, pas de mismatch. */
+function subscribeClock(callback: () => void) {
+  const id = setInterval(callback, 1000);
+  return () => clearInterval(id);
+}
+const nowSeconds = () => Math.floor(Date.now() / 1000);
+
 export function DropCountdown({
   locale,
   isoDate,
@@ -53,14 +62,9 @@ export function DropCountdown({
   isoDate: string;
 }) {
   const target = new Date(isoDate).getTime();
-  const [t, setT] = useState<ReturnType<typeof diff> | null>(null);
+  const now = useSyncExternalStore(subscribeClock, nowSeconds, () => null);
+  const t = now === null ? null : diff(target, now);
   const c = COPY[locale];
-
-  useEffect(() => {
-    setT(diff(target));
-    const id = setInterval(() => setT(diff(target)), 1000);
-    return () => clearInterval(id);
-  }, [target]);
 
   const done = t?.done ?? false;
   const cells: [number, string][] = t
