@@ -11,16 +11,18 @@ const isDev = process.env.NODE_ENV !== "production";
                               (mieux : auto-héberger le .hdr dans /public
                               et passer files="…" pour retirer cette ligne)
    - googletagmanager / google-analytics → GA4 (chargé après consentement)
+   - connect.facebook.net / facebook.com → pixel Meta (chargé après consentement)
+   - analytics.tiktok.com                → pixel TikTok (chargé après consentement)
    'unsafe-inline' (script) : requis par les scripts inline de Next
-   et l'init GA ; 'unsafe-eval' uniquement en dev (React Refresh).
+   et l'init GA/Meta/TikTok ; 'unsafe-eval' uniquement en dev (React Refresh).
    ============================================================= */
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://www.googletagmanager.com https://connect.facebook.net https://analytics.tiktok.com`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://cdn.shopify.com https://www.googletagmanager.com https://*.google-analytics.com",
+  "img-src 'self' data: blob: https://cdn.shopify.com https://www.googletagmanager.com https://*.google-analytics.com https://www.facebook.com https://analytics.tiktok.com",
   "font-src 'self' data:",
-  "connect-src 'self' https://cdn.shopify.com https://raw.githack.com https://www.googletagmanager.com https://*.google-analytics.com",
+  "connect-src 'self' https://cdn.shopify.com https://raw.githack.com https://www.googletagmanager.com https://*.google-analytics.com https://connect.facebook.net https://www.facebook.com https://analytics.tiktok.com",
   "media-src 'self' blob:",
   "worker-src 'self' blob:",
   "frame-src 'none'",
