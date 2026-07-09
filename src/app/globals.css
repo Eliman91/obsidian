@@ -7,19 +7,22 @@
    ex. --color-vantablack  ->  bg-vantablack / text-vantablack ...
    ============================================================= */
 @theme {
-  /* --- Fonds sombres (dominante) --- */
-  --color-vantablack: #0a0a0a;
-  --color-gunmetal: #121212;
-  --color-obsidian: #1a1a1c;
+  /* --- Fonds sombres (dominante) — noir légèrement émeraude --- */
+  --color-vantablack: #0a0f0e;
+  --color-gunmetal: #0f1413;
+  --color-obsidian: #161d1b;
 
-  /* --- Accents métalliques --- */
+  /* --- Accents métalliques (argent / titane, inchangés) --- */
   --color-titanium: #e5e5e5;
   --color-chrome: #f5f5f7;
-  --color-graphite: #8a8a8f;
+  --color-graphite: #869090;
 
-  /* --- Néons holographiques --- */
-  --color-cyan: #00f3ff;
-  --color-plasma: #7000ff;
+  /* --- Accents « Tech-Zen » (les noms cyan/plasma restent pour ne pas
+     renommer tout le site ; seules les valeurs changent) ---
+     cyan  = téal aurore apaisant (accent principal)
+     plasma = bleu profond (accent secondaire) */
+  --color-cyan: #14e0a3;
+  --color-plasma: #0891b2;
 
   /* --- Typographies (injectées via next/font dans le layout) --- */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;

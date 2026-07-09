@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import GadgetViewer from "@/components/canvas3d/GadgetViewerLazy";
 import { ProductGrid } from "@/components/ui/ProductGrid";
 import { FaqSection } from "@/components/ui/FaqSection";
 import { ClubSignup } from "@/components/ui/ClubSignup";
@@ -9,6 +8,9 @@ import { isLocale } from "@/lib/i18n";
 import { CONTACT_EMAIL, DROP_DATE, SITE_NAME, SITE_URL } from "@/lib/site";
 import { getGadgets } from "@/lib/shopify";
 import { Aurora } from "@/components/ui/Aurora";
+import { HeroSceneLazy } from "@/components/canvas3d/HeroSceneLazy";
+import { HeroCTA } from "@/components/ui/HeroCTA";
+import { ParallaxLayer } from "@/components/ui/ParallaxLayer";
 import type { Gadget } from "@/lib/types";
 import { safeJsonLd } from "@/lib/format";
 
@@ -70,23 +72,27 @@ export default async function HomePage({
       {/* HERO */}
       <section className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center">
         <Aurora />
-        <p className="mb-6 font-mono text-xs tracking-[0.4em] text-graphite uppercase">
-          {dict.hero.eyebrow}
-        </p>
-        <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-tight text-holo md:text-7xl">
-          {dict.hero.title}
-        </h1>
-        <p className="mt-6 max-w-xl text-pretty text-base text-graphite md:text-lg">
-          {dict.hero.subtitle}
-        </p>
-        <a
-          href="#collection"
-          className="glass ring-neon mt-10 rounded-[--radius-luxe] px-8 py-3 text-sm font-medium text-chrome transition-transform duration-300 hover:scale-[1.03]"
-        >
-          {dict.hero.cta}
-        </a>
+        <HeroSceneLazy />
+        <ParallaxLayer speed={1.2} className="relative z-10 mb-6">
+          <p className="font-mono text-xs tracking-[0.4em] text-graphite uppercase">
+            {dict.hero.eyebrow}
+          </p>
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.4} className="relative z-10">
+          <h1 className="max-w-4xl text-balance text-5xl font-semibold leading-tight text-holo md:text-7xl">
+            {dict.hero.title}
+          </h1>
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.8} className="relative z-10 mt-6">
+          <p className="max-w-xl text-pretty text-base text-graphite md:text-lg">
+            {dict.hero.subtitle}
+          </p>
+        </ParallaxLayer>
+        <ParallaxLayer speed={0.6} className="relative z-10 mt-10">
+          <HeroCTA href="#collection">{dict.hero.cta}</HeroCTA>
+        </ParallaxLayer>
 
-        <p className="mt-6 text-xs tracking-wide text-graphite">
+        <p className="relative z-10 mt-6 text-xs tracking-wide text-graphite">
           {locale === "fr" ? (
             <>
               🎁 <span className="text-cyan">−10 %</span> sur votre première commande avec le code{" "}
@@ -99,7 +105,7 @@ export default async function HomePage({
             </>
           )}
         </p>
-        <span className="absolute bottom-8 font-mono text-[10px] tracking-[0.3em] text-graphite/60 uppercase">
+        <span className="absolute bottom-8 z-10 font-mono text-[10px] tracking-[0.3em] text-graphite/60 uppercase">
           Scroll ↓
         </span>
       </section>
@@ -117,9 +123,6 @@ export default async function HomePage({
 
         <ProductGrid gadgets={gadgets} locale={locale} labels={dict.product} />
       </section>
-
-      {/* CONFIGURATEUR 3D — showcase de marque (chargé au scroll) */}
-      <GadgetViewer scrollLengthVh={2} />
 
       {/* FAQ — lève les objections d'achat */}
       <FaqSection locale={locale} />

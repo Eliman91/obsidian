@@ -54,7 +54,7 @@ export default async function OpengraphImage({
             marginTop: 36,
             fontSize: 30,
             letterSpacing: "0.18em",
-            color: "#00f3ff",
+            color: "#14e0a3",
             textTransform: "uppercase",
             display: "flex",
           }}

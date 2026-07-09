@@ -10,6 +10,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useCart } from "@/hooks/useCart";
+import { useTilt3D } from "@/hooks/useTilt3D";
 import { formatPrice } from "@/lib/format";
 import { LOCALES } from "@/lib/i18n";
 import { SHOP_ACCOUNT_URL } from "@/lib/site";
@@ -17,6 +18,8 @@ import type { Locale } from "@/lib/types";
 
 export function Navbar({ locale }: { locale: Locale }) {
   const { totalQuantity, subtotal, currencyCode } = useCart();
+  // Bascule 3D subtile de la barre au survol (désactivée mobile/reduced-motion).
+  const navRef = useTilt3D<HTMLElement>({ max: 2.5 });
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -62,7 +65,10 @@ export function Navbar({ locale }: { locale: Locale }) {
   return (
     <header className="fixed inset-x-0 top-0 z-50 flex justify-center px-4 pt-4">
       <div className="relative w-full max-w-5xl">
-        <nav className="glass flex w-full items-center justify-between gap-4 rounded-full px-5 py-3">
+        <nav
+          ref={navRef}
+          className="glass glass-spot flex w-full items-center justify-between gap-4 rounded-full px-5 py-3"
+        >
           {/* Burger (mobile uniquement) */}
           <button
             type="button"
