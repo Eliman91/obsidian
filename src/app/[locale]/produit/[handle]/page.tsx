@@ -4,16 +4,18 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getDictionary } from "../../dictionaries";
 import { isLocale } from "@/lib/i18n";
-import { getGadgetByHandle, getGadgets } from "@/lib/shopify";
+import { getGadgetByHandle, getGadgets, getCollectionByHandle } from "@/lib/shopify";
 import { SITE_URL, localizedAlternates } from "@/lib/site";
 import { formatPrice, truncateAtWord, safeJsonLd } from "@/lib/format";
 import { formatDropDate, isComingSoon } from "@/lib/drop";
 import { AddToCartButton } from "@/components/ui/AddToCartButton";
+import { VariantPurchase } from "@/components/ui/VariantPurchase";
 import { WaitlistSignup } from "@/components/ui/WaitlistSignup";
 import { ReassuranceBar } from "@/components/ui/ReassuranceBar";
 import { ScarcityBadge } from "@/components/ui/ScarcityBadge";
 import { ProductCard } from "@/components/ui/ProductCard";
 import { StickyBuyBar } from "@/components/ui/StickyBuyBar";
+import { ProductAnalytics } from "@/components/ui/ProductAnalytics";
 
 export const revalidate = 300;
 
@@ -77,16 +79,24 @@ export default async function ProductPage({ params }: PageParams) {
   const { locale, handle } = await params;
   if (!isLocale(locale)) notFound();
 
-  const [gadget, dict, allGadgets] = await Promise.all([
+  const [gadget, dict, allGadgets, antiStress] = await Promise.all([
     getGadgetByHandle(handle, locale).catch(() => null),
     getDictionary(locale),
     getGadgets(6, locale).catch(() => []),
+    // Collection « Anti-stress » (Pulse/Zephyr/Cryo) pour un cross-sell ciblé.
+    getCollectionByHandle("anti-stress", locale).catch(() => null),
   ]);
 
   if (!gadget) notFound();
 
-  // Cross-sell : autres produits, en excluant celui affiché.
-  const related = allGadgets.filter((g) => g.handle !== handle).slice(0, 3);
+  // Cross-sell : si le produit appartient à la collection anti-stress, on
+  // propose ses voisins de collection (rituel cohérent) ; sinon repli sur
+  // les best-sellers. On exclut toujours la fiche affichée.
+  const antiStressMembers = antiStress?.gadgets ?? [];
+  const inAntiStress = antiStressMembers.some((g) => g.handle === handle);
+  const related = (inAntiStress ? antiStressMembers : allGadgets)
+    .filter((g) => g.handle !== handle)
+    .slice(0, 3);
 
   const productUrl = `${SITE_URL}/${locale}/produit/${handle}`;
   // Drop à venir (tag Shopify) : visible mais non achetable → liste d'attente.
@@ -132,7 +142,9 @@ export default async function ProductPage({ params }: PageParams) {
         merchantReturnDays: 30,
         returnMethod: "https://schema.org/ReturnByMail",
       },
-      // Livraison France : préparation 1-3 j ouvrés, transit 2-5 j (cf. FAQ).
+      // Livraison France : série préparée à la demande. Délai total annoncé
+      // sur le site = 10 à 20 j (préparation 2-4 j + transit 8-16 j). Doit
+      // rester cohérent avec le messaging « Expédition suivie sous 10 à 20 jours ».
       shippingDetails: {
         "@type": "OfferShippingDetails",
         shippingDestination: {
@@ -143,14 +155,14 @@ export default async function ProductPage({ params }: PageParams) {
           "@type": "ShippingDeliveryTime",
           handlingTime: {
             "@type": "QuantitativeValue",
-            minValue: 1,
-            maxValue: 3,
+            minValue: 2,
+            maxValue: 4,
             unitCode: "DAY",
           },
           transitTime: {
             "@type": "QuantitativeValue",
-            minValue: 2,
-            maxValue: 5,
+            minValue: 8,
+            maxValue: 16,
             unitCode: "DAY",
           },
         },
@@ -188,6 +200,15 @@ export default async function ProductPage({ params }: PageParams) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
+      <ProductAnalytics
+        item={{
+          id: gadget.variantId ?? gadget.id,
+          name: gadget.title,
+          price: gadget.price.amount,
+          quantity: 1,
+        }}
+        currency={gadget.price.currencyCode}
+      />
       <Link
         href={`/${locale}#collection`}
         className="mb-10 inline-block text-xs tracking-widest text-graphite uppercase transition-colors hover:text-cyan"
@@ -197,7 +218,7 @@ export default async function ProductPage({ params }: PageParams) {
 
       <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
         {/* Visuel */}
-        <div className="glass relative aspect-square overflow-hidden rounded-[--radius-luxe] bg-gunmetal">
+        <div className="glass glass-liquid relative aspect-square overflow-hidden rounded-[--radius-luxe] bg-gunmetal">
           {gadget.featuredImage && (
             <Image
               src={gadget.featuredImage.url}
@@ -255,6 +276,13 @@ export default async function ProductPage({ params }: PageParams) {
             {comingSoon ? (
               /* Drop à venir : liste d'attente au lieu de l'achat. */
               <WaitlistSignup locale={locale} dropDate={formatDropDate(locale)} />
+            ) : gadget.variants.length > 1 ? (
+              /* Produit à options (taille, gravure…) : sélecteur complet. */
+              <VariantPurchase
+                gadget={gadget}
+                locale={locale}
+                labels={{ addToCart: dict.product.addToCart, soldOut: dict.product.soldOut }}
+              />
             ) : (
               <AddToCartButton
                 gadget={gadget}
@@ -289,8 +317,9 @@ export default async function ProductPage({ params }: PageParams) {
         </section>
       )}
 
-      {/* Barre d'achat mobile : uniquement pour les produits achetables. */}
-      {!comingSoon && (
+      {/* Barre d'achat mobile : produits achetables mono-variante seulement
+          (un produit à options doit passer par le sélecteur ci-dessus). */}
+      {!comingSoon && gadget.variants.length <= 1 && (
         <StickyBuyBar
           gadget={gadget}
           locale={locale}

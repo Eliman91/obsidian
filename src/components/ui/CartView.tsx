@@ -12,7 +12,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/hooks/useCart";
 import { formatPrice } from "@/lib/format";
+import { trackBeginCheckout } from "@/lib/track";
 import type { Locale } from "@/lib/types";
+
+// Seuil de livraison offerte (€). Renseigné dans Vercel UNIQUEMENT si la
+// boutique Shopify offre réellement la livraison au-dessus de ce montant —
+// sinon on n'affiche rien (pas de fausse promesse). Vide = barre masquée.
+const FREE_SHIPPING_THRESHOLD = Number(
+  process.env.NEXT_PUBLIC_FREE_SHIPPING_THRESHOLD ?? 0,
+);
 
 interface CartLabels {
   title: string;
@@ -37,6 +45,15 @@ export function CartView({
 
   async function handleCheckout() {
     if (lines.length === 0) return;
+    trackBeginCheckout(
+      lines.map((l) => ({
+        id: l.variantId,
+        name: l.title,
+        price: l.unitPrice,
+        quantity: l.quantity,
+      })),
+      currencyCode,
+    );
     setLoading(true);
     setError(null);
     try {
@@ -47,6 +64,9 @@ export function CartView({
           lines: lines.map((l) => ({
             variantId: l.variantId,
             quantity: l.quantity,
+            ...(l.attributes && l.attributes.length > 0
+              ? { attributes: l.attributes }
+              : {}),
           })),
           // Langue du checkout Shopify (page de paiement localisée).
           locale,
@@ -84,7 +104,7 @@ export function CartView({
       <ul className="lg:col-span-2 flex flex-col gap-4">
         {lines.map((line) => (
           <li
-            key={line.variantId}
+            key={line.id}
             className="glass flex items-center gap-4 rounded-[--radius-luxe] p-4"
           >
             <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-gunmetal">
@@ -101,6 +121,14 @@ export function CartView({
 
             <div className="flex-1">
               <p className="text-sm font-medium text-chrome">{line.title}</p>
+              {line.variantTitle && (
+                <p className="mt-0.5 text-[11px] text-graphite">{line.variantTitle}</p>
+              )}
+              {line.attributes?.map((attr) => (
+                <p key={attr.key} className="mt-0.5 text-[11px] text-cyan">
+                  {attr.key} : « {attr.value} »
+                </p>
+              ))}
               <p className="mt-1 text-xs text-graphite">
                 {formatPrice(line.unitPrice, line.currencyCode, locale)}
               </p>
@@ -112,7 +140,7 @@ export function CartView({
                     aria-label={
                       locale === "fr" ? "Diminuer la quantité" : "Decrease quantity"
                     }
-                    onClick={() => setQuantity(line.variantId, line.quantity - 1)}
+                    onClick={() => setQuantity(line.id, line.quantity - 1)}
                     className="px-3 py-1 text-graphite hover:text-chrome"
                   >
                     −
@@ -125,7 +153,7 @@ export function CartView({
                     aria-label={
                       locale === "fr" ? "Augmenter la quantité" : "Increase quantity"
                     }
-                    onClick={() => setQuantity(line.variantId, line.quantity + 1)}
+                    onClick={() => setQuantity(line.id, line.quantity + 1)}
                     className="px-3 py-1 text-graphite hover:text-chrome"
                   >
                     +
@@ -133,7 +161,7 @@ export function CartView({
                 </div>
                 <button
                   type="button"
-                  onClick={() => removeLine(line.variantId)}
+                  onClick={() => removeLine(line.id)}
                   className="text-[11px] tracking-wide text-graphite uppercase hover:text-plasma"
                 >
                   {labels.remove}
@@ -150,6 +178,40 @@ export function CartView({
 
       {/* Résumé */}
       <aside className="glass-heavy h-fit rounded-[--radius-luxe] p-6">
+        {FREE_SHIPPING_THRESHOLD > 0 && (
+          <div className="mb-6">
+            {subtotal >= FREE_SHIPPING_THRESHOLD ? (
+              <p className="text-xs font-medium text-cyan">
+                {locale === "fr"
+                  ? "✓ Livraison offerte débloquée"
+                  : "✓ Free shipping unlocked"}
+              </p>
+            ) : (
+              <p className="text-xs text-graphite">
+                {locale === "fr" ? "Plus que " : "Only "}
+                <span className="font-semibold text-chrome">
+                  {formatPrice(
+                    FREE_SHIPPING_THRESHOLD - subtotal,
+                    currencyCode,
+                    locale,
+                  )}
+                </span>
+                {locale === "fr"
+                  ? " pour la livraison offerte"
+                  : " away from free shipping"}
+              </p>
+            )}
+            <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-titanium/10">
+              <div
+                className="h-full rounded-full bg-cyan transition-all duration-500"
+                style={{
+                  width: `${Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         <div className="flex items-center justify-between text-sm">
           <span className="text-graphite">{labels.subtotal}</span>
           <span className="font-semibold text-chrome tabular-nums">

@@ -8,6 +8,7 @@ import { getDictionary } from "./dictionaries";
 import { isLocale } from "@/lib/i18n";
 import { CONTACT_EMAIL, DROP_DATE, SITE_NAME, SITE_URL } from "@/lib/site";
 import { getGadgets } from "@/lib/shopify";
+import { Aurora } from "@/components/ui/Aurora";
 import type { Gadget } from "@/lib/types";
 import { safeJsonLd } from "@/lib/format";
 
@@ -67,7 +68,8 @@ export default async function HomePage({
         dangerouslySetInnerHTML={{ __html: safeJsonLd(webSiteJsonLd) }}
       />
       {/* HERO */}
-      <section className="relative flex min-h-screen flex-col items-center justify-center px-6 text-center">
+      <section className="relative isolate flex min-h-screen flex-col items-center justify-center overflow-hidden px-6 text-center">
+        <Aurora />
         <p className="mb-6 font-mono text-xs tracking-[0.4em] text-graphite uppercase">
           {dict.hero.eyebrow}
         </p>

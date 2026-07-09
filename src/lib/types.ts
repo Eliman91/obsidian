@@ -31,6 +31,27 @@ export interface GadgetMetafields {
   material: string | null;
 }
 
+/** Une option sélectionnée d'une variante (ex. { name: "Taille", value: "9" }). */
+export interface VariantOption {
+  name: string;
+  value: string;
+}
+
+/**
+ * Variante d'un produit (taille, finition, gravée/non…).
+ * Exposée pour les produits multi-variantes (ex. Pulse : 7 tailles ×
+ * gravure). Les produits mono-variante n'en ont qu'une.
+ */
+export interface GadgetVariant {
+  id: string;
+  title: string;
+  sku: string | null;
+  availableForSale: boolean;
+  quantityAvailable: number | null;
+  price: Money;
+  selectedOptions: VariantOption[];
+}
+
 /** Produit normalisé, prêt à consommer par l'UI. */
 export interface Gadget {
   id: string;
@@ -40,10 +61,15 @@ export interface Gadget {
   /** Description au format HTML (listes, gras…) pour la page produit. */
   descriptionHtml: string;
   featuredImage: MediaImage | null;
-  /** merchandiseId de la première variante (pour l'ajout au panier). */
+  /** merchandiseId de la première variante (mono-variante / repli). */
   variantId: string | null;
   /** SKU de la première variante (donnée structurée Product). */
   sku: string | null;
+  /**
+   * Toutes les variantes du produit. Un seul élément pour un produit
+   * mono-variante ; plusieurs pour un produit à options (ex. Pulse).
+   */
+  variants: GadgetVariant[];
   /**
    * Tags Shopify du produit. Pilote notamment le mode
    * « Drop à venir » (tag drop-a-venir) : produit visible mais

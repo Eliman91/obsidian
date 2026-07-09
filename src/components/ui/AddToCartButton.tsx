@@ -8,6 +8,7 @@
 import { useState } from "react";
 import type { Gadget } from "@/lib/types";
 import { useCart } from "@/hooks/useCart";
+import { trackAddToCart } from "@/lib/track";
 
 interface AddToCartButtonProps {
   gadget: Gadget;
@@ -40,6 +41,15 @@ export function AddToCartButton({
       currencyCode: gadget.price.currencyCode,
       quantity: 1,
     });
+    trackAddToCart(
+      {
+        id: gadget.variantId,
+        name: gadget.title,
+        price: gadget.price.amount,
+        quantity: 1,
+      },
+      gadget.price.currencyCode,
+    );
     setAdded(true);
     window.setTimeout(() => setAdded(false), 1600);
   }

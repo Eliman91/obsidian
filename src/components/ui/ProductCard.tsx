@@ -30,7 +30,7 @@ export function ProductCard({ gadget, locale, labels }: ProductCardProps) {
   return (
     <article
       ref={revealRef}
-      className="glass group flex flex-col overflow-hidden rounded-[--radius-luxe]"
+      className="glass glass-spot group flex flex-col overflow-hidden rounded-[--radius-luxe]"
     >
       {/* Visuel cliquable */}
       <Link href={href} className="relative block aspect-square w-full overflow-hidden bg-gunmetal">

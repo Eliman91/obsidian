@@ -14,25 +14,53 @@ import {
   type ReactNode,
 } from "react";
 
+/** Attribut de ligne (line item property Shopify), ex. le texte de gravure. */
+export interface CartLineAttribute {
+  key: string;
+  value: string;
+}
+
 export interface CartLine {
   /** Variant ID Shopify (merchandiseId pour le checkout). */
   variantId: string;
   handle: string;
   title: string;
+  /** Descriptif de la variante choisie (ex. « 9 / Gravure personnalisée »). */
+  variantTitle?: string;
   imageUrl: string | null;
   unitPrice: number;
   currencyCode: string;
   quantity: number;
+  /** Attributs de ligne (gravure…). Deux lignes identiques SAUF attributs = 2 lignes. */
+  attributes?: CartLineAttribute[];
 }
+
+/** Ligne enrichie d'un identifiant stable (variante + attributs). */
+export type IdentifiedCartLine = CartLine & { id: string };
 
 interface CartState {
   lines: CartLine[];
 }
 
+/**
+ * Identité d'une ligne = variante + attributs sérialisés. Ainsi une bague
+ * gravée « MARIE » et une gravée « PAUL » (même variantId) restent 2 lignes,
+ * et deux ajouts identiques fusionnent bien leurs quantités.
+ */
+function lineId(line: CartLine): string {
+  const attrs = line.attributes?.length
+    ? line.attributes
+        .map((a) => `${a.key}=${a.value}`)
+        .sort()
+        .join("|")
+    : "";
+  return attrs ? `${line.variantId}#${attrs}` : line.variantId;
+}
+
 type CartAction =
   | { type: "ADD"; line: CartLine }
-  | { type: "REMOVE"; variantId: string }
-  | { type: "SET_QTY"; variantId: string; quantity: number }
+  | { type: "REMOVE"; id: string }
+  | { type: "SET_QTY"; id: string; quantity: number }
   | { type: "CLEAR" }
   | { type: "HYDRATE"; state: CartState };
 
@@ -43,13 +71,12 @@ function cartReducer(state: CartState, action: CartAction): CartState {
     case "HYDRATE":
       return action.state;
     case "ADD": {
-      const existing = state.lines.find(
-        (l) => l.variantId === action.line.variantId,
-      );
+      const id = lineId(action.line);
+      const existing = state.lines.find((l) => lineId(l) === id);
       if (existing) {
         return {
           lines: state.lines.map((l) =>
-            l.variantId === action.line.variantId
+            lineId(l) === id
               ? { ...l, quantity: l.quantity + action.line.quantity }
               : l,
           ),
@@ -58,12 +85,12 @@ function cartReducer(state: CartState, action: CartAction): CartState {
       return { lines: [...state.lines, action.line] };
     }
     case "REMOVE":
-      return { lines: state.lines.filter((l) => l.variantId !== action.variantId) };
+      return { lines: state.lines.filter((l) => lineId(l) !== action.id) };
     case "SET_QTY":
       return {
         lines: state.lines
           .map((l) =>
-            l.variantId === action.variantId
+            lineId(l) === action.id
               ? { ...l, quantity: Math.max(0, action.quantity) }
               : l,
           )
@@ -77,13 +104,13 @@ function cartReducer(state: CartState, action: CartAction): CartState {
 }
 
 export interface CartContextValue {
-  lines: CartLine[];
+  lines: IdentifiedCartLine[];
   totalQuantity: number;
   subtotal: number;
   currencyCode: string;
   addLine: (line: CartLine) => void;
-  removeLine: (variantId: string) => void;
-  setQuantity: (variantId: string, quantity: number) => void;
+  removeLine: (id: string) => void;
+  setQuantity: (id: string, quantity: number) => void;
   clear: () => void;
 }
 
@@ -118,14 +145,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       0,
     );
     return {
-      lines: state.lines,
+      lines: state.lines.map((l) => ({ ...l, id: lineId(l) })),
       totalQuantity,
       subtotal,
       currencyCode: state.lines[0]?.currencyCode ?? "EUR",
       addLine: (line) => dispatch({ type: "ADD", line }),
-      removeLine: (variantId) => dispatch({ type: "REMOVE", variantId }),
-      setQuantity: (variantId, quantity) =>
-        dispatch({ type: "SET_QTY", variantId, quantity }),
+      removeLine: (id) => dispatch({ type: "REMOVE", id }),
+      setQuantity: (id, quantity) => dispatch({ type: "SET_QTY", id, quantity }),
       clear: () => dispatch({ type: "CLEAR" }),
     };
   }, [state]);

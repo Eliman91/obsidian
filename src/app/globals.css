@@ -70,25 +70,125 @@
    UTILITAIRES GLASSMORPHISM haut de gamme (@utility = Tailwind v4)
    Usage : <div className="glass"> ... </div>
    ============================================================= */
+/* --- VERRE LIQUIDE ---
+   Empilement qui simule un vrai panneau de verre :
+   1. dégradé de surface   → réfraction (lumière en haut, ombre en bas)
+   2. fond translucide      → teinte gunmetal
+   3. blur + saturate + brightness → matière « liquide » vivante
+   4. box-shadow multi-couches :
+        · arête spéculaire brillante (haut)
+        · liseré interne fin
+        · lueur néon en profondeur (bas)
+        · ombres portées étagées (profondeur réelle) */
 @utility glass {
-  background: color-mix(in oklab, var(--color-gunmetal) 55%, transparent);
-  backdrop-filter: blur(20px) saturate(140%);
-  -webkit-backdrop-filter: blur(20px) saturate(140%);
-  border: 1px solid color-mix(in oklab, var(--color-titanium) 12%, transparent);
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in oklab, var(--color-chrome) 9%, transparent) 0%,
+      transparent 34%,
+      transparent 66%,
+      color-mix(in oklab, var(--color-vantablack) 22%, transparent) 100%
+    ),
+    color-mix(in oklab, var(--color-gunmetal) 48%, transparent);
+  backdrop-filter: blur(24px) saturate(185%) brightness(1.06);
+  -webkit-backdrop-filter: blur(24px) saturate(185%) brightness(1.06);
+  border: 1px solid color-mix(in oklab, var(--color-titanium) 14%, transparent);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, var(--color-chrome) 8%, transparent),
-    0 8px 40px -12px rgba(0, 0, 0, 0.7);
+    inset 0 1px 0 0 color-mix(in oklab, var(--color-chrome) 24%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, var(--color-chrome) 4%, transparent),
+    inset 0 -24px 48px -28px color-mix(in oklab, var(--color-plasma) 16%, transparent),
+    0 8px 40px -12px rgba(0, 0, 0, 0.7),
+    0 2px 10px -6px rgba(0, 0, 0, 0.55);
+  transition:
+    box-shadow 0.5s var(--ease-luxe),
+    border-color 0.5s var(--ease-luxe);
 }
 
 /* Variante plus prononcée pour panneaux / modales "club privé" */
 @utility glass-heavy {
-  background: color-mix(in oklab, var(--color-obsidian) 70%, transparent);
-  backdrop-filter: blur(32px) saturate(160%);
-  -webkit-backdrop-filter: blur(32px) saturate(160%);
-  border: 1px solid color-mix(in oklab, var(--color-titanium) 16%, transparent);
+  background:
+    linear-gradient(
+      155deg,
+      color-mix(in oklab, var(--color-chrome) 12%, transparent) 0%,
+      transparent 32%,
+      transparent 64%,
+      color-mix(in oklab, var(--color-vantablack) 28%, transparent) 100%
+    ),
+    color-mix(in oklab, var(--color-obsidian) 62%, transparent);
+  backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
+  -webkit-backdrop-filter: blur(40px) saturate(200%) brightness(1.08);
+  border: 1px solid color-mix(in oklab, var(--color-titanium) 18%, transparent);
   box-shadow:
-    inset 0 1px 0 0 color-mix(in oklab, var(--color-chrome) 10%, transparent),
-    0 20px 60px -20px rgba(0, 0, 0, 0.85);
+    inset 0 1px 0 0 color-mix(in oklab, var(--color-chrome) 28%, transparent),
+    inset 0 0 0 1px color-mix(in oklab, var(--color-chrome) 5%, transparent),
+    inset 0 -30px 60px -30px color-mix(in oklab, var(--color-plasma) 20%, transparent),
+    0 20px 60px -20px rgba(0, 0, 0, 0.85),
+    0 4px 16px -8px rgba(0, 0, 0, 0.6);
+  transition:
+    box-shadow 0.5s var(--ease-luxe),
+    border-color 0.5s var(--ease-luxe);
+}
+
+/* Survol : le verre « s'anime » — arête plus vive + halo cyan de profondeur. */
+@media (hover: hover) {
+  .glass:hover,
+  .glass-heavy:hover {
+    border-color: color-mix(in oklab, var(--color-cyan) 22%, transparent);
+    box-shadow:
+      inset 0 1px 0 0 color-mix(in oklab, var(--color-chrome) 36%, transparent),
+      inset 0 0 0 1px color-mix(in oklab, var(--color-cyan) 12%, transparent),
+      inset 0 -26px 56px -26px color-mix(in oklab, var(--color-cyan) 20%, transparent),
+      0 12px 50px -12px rgba(0, 0, 0, 0.72),
+      0 0 30px -6px color-mix(in oklab, var(--color-cyan) 28%, transparent);
+  }
+}
+
+/* --- REFLET LIQUIDE ANIMÉ ---
+   À ajouter en plus de `glass` sur un élément vitrine (relative +
+   overflow-hidden requis) : une bande de lumière balaie lentement
+   la surface, comme un reflet qui glisse sur du verre.
+   Respecte prefers-reduced-motion (coupée si l'utilisateur le demande). */
+@utility glass-liquid {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.glass-liquid::before {
+  content: "";
+  position: absolute;
+  inset: -20% -40%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    100deg,
+    transparent 34%,
+    color-mix(in oklab, var(--color-chrome) 16%, transparent) 47%,
+    color-mix(in oklab, var(--color-cyan) 12%, transparent) 50%,
+    color-mix(in oklab, var(--color-chrome) 16%, transparent) 53%,
+    transparent 66%
+  );
+  transform: translateX(-60%) skewX(-16deg);
+  animation: glass-sheen 8s var(--ease-luxe) infinite;
+  animation-delay: 2s;
+}
+
+@keyframes glass-sheen {
+  0%,
+  18% {
+    transform: translateX(-70%) skewX(-16deg);
+  }
+  55%,
+  100% {
+    transform: translateX(70%) skewX(-16deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-liquid::before {
+    animation: none;
+    opacity: 0.5;
+  }
 }
 
 /* Dégradé de texte holographique (titres héro) */
@@ -107,4 +207,119 @@
 /* Halo néon réutilisable */
 @utility ring-neon {
   box-shadow: var(--shadow-glow-cyan);
+}
+
+/* =============================================================
+   SIGNATURE 1 — AURORE AMBIANTE
+   Nappes de lumière cyan/plasma qui dérivent lentement derrière
+   le hero. Décoratif, non interactif, coupé si reduced-motion.
+   ============================================================= */
+.aurora {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora__blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  opacity: 0.55;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+.aurora__blob--cyan {
+  width: 48vw;
+  height: 48vw;
+  left: -8vw;
+  top: -6vw;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-cyan) 55%, transparent),
+    transparent 68%
+  );
+  animation: aurora-1 19s var(--ease-luxe) infinite alternate;
+}
+.aurora__blob--plasma {
+  width: 52vw;
+  height: 52vw;
+  right: -12vw;
+  top: 4vw;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-plasma) 60%, transparent),
+    transparent 66%
+  );
+  animation: aurora-2 23s var(--ease-luxe) infinite alternate;
+}
+.aurora__blob--accent {
+  width: 38vw;
+  height: 38vw;
+  left: 28vw;
+  bottom: -16vw;
+  background: radial-gradient(
+    circle,
+    color-mix(in oklab, var(--color-cyan) 38%, transparent),
+    transparent 70%
+  );
+  animation: aurora-3 27s var(--ease-luxe) infinite alternate;
+}
+@keyframes aurora-1 {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(8vw, 7vh, 0) scale(1.18); }
+}
+@keyframes aurora-2 {
+  from { transform: translate3d(0, 0, 0) scale(1.05); }
+  to { transform: translate3d(-7vw, 5vh, 0) scale(0.9); }
+}
+@keyframes aurora-3 {
+  from { transform: translate3d(0, 0, 0) scale(0.95); }
+  to { transform: translate3d(-6vw, -8vh, 0) scale(1.2); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .aurora__blob { animation: none; }
+}
+
+/* =============================================================
+   SIGNATURE 2 — GRAIN FIN
+   Micro-texture argentique sur tout le site : casse le plat du
+   noir et le banding des dégradés (rendu « matière » premium).
+   Statique = coût quasi nul.
+   ============================================================= */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.04;
+  mix-blend-mode: soft-light;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* =============================================================
+   SIGNATURE 3 — RÉFLEXION QUI SUIT LE CURSEUR
+   Ajoute `glass-spot` à un panneau verre : une lumière cyan
+   naît sous le curseur (variables --spot-x/-y/-o pilotées par le
+   composant GlassSpotlight). Le verre « attrape » la lumière.
+   ============================================================= */
+@utility glass-spot {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.glass-spot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: radial-gradient(
+    260px circle at var(--spot-x, 50%) var(--spot-y, 50%),
+    color-mix(in oklab, var(--color-cyan) 22%, transparent),
+    transparent 62%
+  );
+  opacity: var(--spot-o, 0);
+  transition: opacity 0.45s var(--ease-luxe);
 }

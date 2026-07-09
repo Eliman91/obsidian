@@ -1,6 +1,12 @@
 import "server-only";
 import { createStorefrontApiClient } from "@shopify/storefront-api-client";
-import type { Gadget, GadgetMetafields, Locale, Money } from "@/lib/types";
+import type {
+  Gadget,
+  GadgetMetafields,
+  GadgetVariant,
+  Locale,
+  Money,
+} from "@/lib/types";
 import { COMING_SOON_TAG } from "@/lib/drop";
 
 /* =============================================================
@@ -80,15 +86,24 @@ const GADGET_FRAGMENT = /* GraphQL */ `
         currencyCode
       }
     }
-    # Première variante disponible → merchandiseId pour l'ajout au panier.
+    # Toutes les variantes (max 50) → sélecteur taille/gravure + merchandiseId.
     # quantityAvailable = stock live (rareté). Nécessite le droit
     # unauthenticated_read_product_inventory : sinon renvoyé null (dégradation OK).
-    variants(first: 1) {
+    variants(first: 50) {
       nodes {
         id
+        title
         sku
         availableForSale
         quantityAvailable
+        price {
+          amount
+          currencyCode
+        }
+        selectedOptions {
+          name
+          value
+        }
       }
     }
     # Taille de l'édition limitée (série numérotée).
@@ -163,9 +178,12 @@ interface RawGadget {
   variants: {
     nodes: {
       id: string;
+      title: string;
       sku: string | null;
       availableForSale: boolean;
       quantityAvailable: number | null;
+      price: RawMoney;
+      selectedOptions: { name: string; value: string }[];
     }[];
   };
   editionSize: { value: string } | null;
@@ -190,6 +208,18 @@ function toMetafields(raw: RawGadget): GadgetMetafields {
   };
 }
 
+function toVariant(raw: RawGadget["variants"]["nodes"][number]): GadgetVariant {
+  return {
+    id: raw.id,
+    title: raw.title,
+    sku: raw.sku || null,
+    availableForSale: raw.availableForSale,
+    quantityAvailable: raw.quantityAvailable ?? null,
+    price: toMoney(raw.price),
+    selectedOptions: raw.selectedOptions ?? [],
+  };
+}
+
 function normalizeGadget(raw: RawGadget): Gadget {
   const price = toMoney(raw.priceRange.minVariantPrice);
   const compareAt = toMoney(raw.compareAtPriceRange.minVariantPrice);
@@ -208,6 +238,7 @@ function normalizeGadget(raw: RawGadget): Gadget {
     featuredImage: raw.featuredImage,
     variantId: raw.variants.nodes[0]?.id ?? null,
     sku: raw.variants.nodes[0]?.sku || null,
+    variants: (raw.variants.nodes ?? []).map(toVariant),
     price,
     // On n'expose compareAtPrice que s'il est réellement supérieur (vraie promo).
     compareAtPrice: compareAt.amount > price.amount ? compareAt : null,
@@ -366,6 +397,11 @@ const CART_CREATE_MUTATION = /* GraphQL */ `
 export interface CheckoutLineInput {
   variantId: string;
   quantity: number;
+  /**
+   * Attributs de ligne (line item properties), ex. le texte de gravure.
+   * Transmis à Shopify → visibles sur la commande et le bon de préparation.
+   */
+  attributes?: { key: string; value: string }[];
 }
 
 export interface CheckoutOptions {
@@ -431,6 +467,10 @@ export async function createCheckoutUrl(
   const cartLines = lines.map((l) => ({
     merchandiseId: l.variantId,
     quantity: l.quantity,
+    // Attributs de ligne (gravure…) : uniquement s'il y en a.
+    ...(l.attributes && l.attributes.length > 0
+      ? { attributes: l.attributes }
+      : {}),
   }));
 
   const { data, errors } = await shopifyClient.request<{

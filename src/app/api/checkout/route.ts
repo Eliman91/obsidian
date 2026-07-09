@@ -16,6 +16,26 @@ import { isLocale } from "@/lib/i18n";
 
 const MAX_LINES = 20;
 const MAX_QUANTITY = 99;
+const MAX_ATTRIBUTES = 5;
+const MAX_ATTR_VALUE = 100;
+
+/** Valide les attributs de ligne optionnels (ex. texte de gravure). */
+function areValidAttributes(value: unknown): boolean {
+  if (value === undefined) return true;
+  if (!Array.isArray(value) || value.length > MAX_ATTRIBUTES) return false;
+  return value.every((attr) => {
+    if (typeof attr !== "object" || attr === null) return false;
+    const a = attr as Record<string, unknown>;
+    return (
+      typeof a.key === "string" &&
+      a.key.length > 0 &&
+      a.key.length <= 50 &&
+      typeof a.value === "string" &&
+      a.value.length > 0 &&
+      a.value.length <= MAX_ATTR_VALUE
+    );
+  });
+}
 
 function isValidLine(value: unknown): value is CheckoutLineInput {
   if (typeof value !== "object" || value === null) return false;
@@ -26,7 +46,8 @@ function isValidLine(value: unknown): value is CheckoutLineInput {
     typeof line.quantity === "number" &&
     Number.isInteger(line.quantity) &&
     line.quantity > 0 &&
-    line.quantity <= MAX_QUANTITY
+    line.quantity <= MAX_QUANTITY &&
+    areValidAttributes(line.attributes)
   );
 }
 
