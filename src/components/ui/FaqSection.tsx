@@ -11,7 +11,7 @@ const FAQ: Record<Locale, { q: string; a: string }[]> = {
   fr: [
     {
       q: "Quels sont les délais de livraison ?",
-      a: "Préparation sous 1 à 3 jours ouvrés. Livraison en France sous 2 à 5 jours, en Europe sous 5 à 10 jours, avec numéro de suivi.",
+      a: "Chaque pièce est préparée à la demande (série limitée). Comptez une expédition suivie sous 10 à 20 jours ; votre numéro de suivi vous est communiqué au départ.",
     },
     {
       q: "Puis-je retourner un article ?",
@@ -19,7 +19,7 @@ const FAQ: Record<Locale, { q: string; a: string }[]> = {
     },
     {
       q: "Les matériaux sont-ils garantis ?",
-      a: "Chaque pièce est façonnée en titane de grade aérospatial et chrome poli, et bénéficie d'une garantie de 2 ans.",
+      a: "Les matériaux varient selon la pièce : la collection anti-stress (dont Pulse) est en acier inoxydable, les éditions supérieures en titane et chrome poli. Vous bénéficiez de la garantie légale de conformité de 2 ans.",
     },
     {
       q: "Le paiement est-il sécurisé ?",
@@ -33,7 +33,7 @@ const FAQ: Record<Locale, { q: string; a: string }[]> = {
   en: [
     {
       q: "What are the delivery times?",
-      a: "Orders ship within 1–3 business days. Delivery takes 2–5 days in France and 5–10 days across Europe, with tracking.",
+      a: "Each piece is made to order (limited series). Expect tracked shipping within 10 to 20 days; your tracking number is shared at dispatch.",
     },
     {
       q: "Can I return an item?",
@@ -41,7 +41,7 @@ const FAQ: Record<Locale, { q: string; a: string }[]> = {
     },
     {
       q: "Are the materials guaranteed?",
-      a: "Each piece is crafted from aerospace-grade titanium and polished chrome, and comes with a 2-year warranty.",
+      a: "Materials vary by piece: the anti-stress collection (including Pulse) is stainless steel, higher editions are titanium and polished chrome. You are covered by the 2-year legal conformity guarantee.",
     },
     {
       q: "Is payment secure?",
