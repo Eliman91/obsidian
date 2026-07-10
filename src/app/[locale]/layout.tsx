@@ -17,14 +17,14 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 
 const COPY = {
   fr: {
-    title: `${SITE_NAME} — Gadgets futuristes de luxe`,
+    title: `${SITE_NAME} — Bague anti-stress en acier, série numérotée`,
     description:
-      "Des gadgets d'exception façonnés dans le titane et le chrome. La collection Obsidian, réservée à quelques initiés.",
+      "La bague anti-stress à faire tourner entre vos doigts. Acier inoxydable, série limitée numérotée. Respirez, recentrez-vous. Livraison suivie, retours 30 jours.",
   },
   en: {
-    title: `${SITE_NAME} — Futuristic Luxury Gadgets`,
+    title: `${SITE_NAME} — Anti-stress spinner ring in steel, numbered edition`,
     description:
-      "Exceptional gadgets forged in titanium and chrome. The Obsidian collection, reserved for a chosen few.",
+      "The anti-stress ring to spin between your fingers. Stainless steel, limited numbered edition. Breathe, refocus. Tracked shipping, 30-day returns.",
   },
 } as const;
 
