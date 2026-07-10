@@ -292,6 +292,20 @@ export default async function ProductPage({ params }: PageParams) {
             )}
           </div>
 
+          {/* Réversion du risque : rassure juste après le bouton d'achat.
+              Cohérent avec la politique retours 30 j (FAQ + JSON-LD). */}
+          <div className="mt-4 flex items-center gap-2.5 rounded-[--radius-luxe] border border-cyan/20 bg-cyan/[0.05] px-4 py-3 text-sm text-chrome">
+            <span aria-hidden className="text-base">🛡️</span>
+            <span>
+              <span className="font-medium text-cyan">
+                {locale === "fr" ? "Satisfait ou remboursé" : "Money-back guarantee"}
+              </span>{" "}
+              {locale === "fr"
+                ? "sous 30 jours — retour simple."
+                : "within 30 days — easy returns."}
+            </span>
+          </div>
+
           <div className="mt-8">
             <ReassuranceBar locale={locale} />
           </div>
