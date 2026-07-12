@@ -9,6 +9,7 @@ import { CONTACT_EMAIL, DROP_DATE, SITE_NAME, SITE_URL } from "@/lib/site";
 import { getGadgets } from "@/lib/shopify";
 import { Aurora } from "@/components/ui/Aurora";
 import { HeroSceneLazy } from "@/components/canvas3d/HeroSceneLazy";
+import { RingShowcase } from "@/components/canvas3d/RingShowcase";
 import { HeroCTA } from "@/components/ui/HeroCTA";
 import { ParallaxLayer } from "@/components/ui/ParallaxLayer";
 import type { Gadget } from "@/lib/types";
@@ -109,6 +110,9 @@ export default async function HomePage({
           Scroll ↓
         </span>
       </section>
+
+      {/* SHOWCASE 3D — la bague Pulse qui tourne au scroll (façon Apple) */}
+      <RingShowcase locale={locale} />
 
       {/* COLLECTION — produits Shopify (remontée en haut pour la conversion) */}
       <section id="collection" className="mx-auto max-w-6xl px-6 py-24">
