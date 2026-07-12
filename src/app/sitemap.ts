@@ -44,6 +44,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         priority: 0.7,
       },
       {
+        url: `${SITE_URL}/${locale}/arreter-de-se-ronger-les-ongles`,
+        lastModified,
+        changeFrequency: "monthly",
+        priority: 0.6,
+      },
+      {
         url: `${SITE_URL}/${locale}/contact`,
         lastModified,
         changeFrequency: "monthly",

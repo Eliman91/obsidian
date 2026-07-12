@@ -272,6 +272,24 @@ export default async function ProductPage({ params }: PageParams) {
             dangerouslySetInnerHTML={{ __html: gadget.descriptionHtml }}
           />
 
+          {/* Bundle « 2e à -50% » : affiché UNIQUEMENT sur Pulse, où la remise
+              automatique Shopify existe réellement (sinon fausse promesse). */}
+          {handle === "obsidian-pulse" && !comingSoon && (
+            <div className="mt-8 flex items-center gap-3 rounded-[--radius-luxe] border border-plasma/30 bg-plasma/[0.06] px-4 py-3">
+              <span aria-hidden className="text-lg">
+                🎁
+              </span>
+              <p className="text-sm text-chrome">
+                <span className="font-semibold text-cyan">
+                  {locale === "fr" ? "Prenez-en 2" : "Get 2"}
+                </span>{" "}
+                {locale === "fr"
+                  ? "— la 2ᵉ bague est à −50 %, réduction appliquée automatiquement au panier."
+                  : "— the 2nd ring is 50% off, applied automatically at checkout."}
+              </p>
+            </div>
+          )}
+
           <div className="mt-10">
             {comingSoon ? (
               /* Drop à venir : liste d'attente au lieu de l'achat. */
